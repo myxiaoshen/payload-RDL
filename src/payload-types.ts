@@ -69,6 +69,7 @@ export interface Config {
   collections: {
     pages: Page;
     posts: Post;
+    software: Software;
     media: Media;
     categories: Category;
     users: User;
@@ -91,6 +92,7 @@ export interface Config {
   collectionsSelect: {
     pages: PagesSelect<false> | PagesSelect<true>;
     posts: PostsSelect<false> | PostsSelect<true>;
+    software: SoftwareSelect<false> | SoftwareSelect<true>;
     media: MediaSelect<false> | MediaSelect<true>;
     categories: CategoriesSelect<false> | CategoriesSelect<true>;
     users: UsersSelect<false> | UsersSelect<true>;
@@ -420,6 +422,8 @@ export interface Category {
 export interface User {
   id: string;
   name?: string | null;
+  role?: ('user' | 'admin') | null;
+  avatar?: (string | null) | Media;
   updatedAt: string;
   createdAt: string;
   email: string;
@@ -774,6 +778,82 @@ export interface Form {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "software".
+ */
+export interface Software {
+  id: string;
+  title: string;
+  thumbnail?: (string | null) | Media;
+  /**
+   * 显示在列表页的一句话简介
+   */
+  summary?: string | null;
+  description?: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  } | null;
+  screenshots?:
+    | {
+        image: string | Media;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * 未登录访客无法通过 API 获取这些下载地址
+   */
+  downloadFiles?:
+    | {
+        /**
+         * 例如：v2.1.0 Windows 64 位
+         */
+        label: string;
+        platform?: ('windows' | 'macos' | 'linux' | 'android' | 'ios' | 'web') | null;
+        /**
+         * 例如：32.5 MB
+         */
+        fileSize?: string | null;
+        fileSource?: ('upload' | 'url') | null;
+        file?: (string | null) | Media;
+        url?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  meta?: {
+    title?: string | null;
+    /**
+     * Maximum upload file size: 12MB. Recommended file size for images is <500KB.
+     */
+    image?: (string | null) | Media;
+    description?: string | null;
+  };
+  version?: string | null;
+  platform?: ('windows' | 'macos' | 'linux' | 'android' | 'ios' | 'web')[] | null;
+  categories?: (string | Category)[] | null;
+  featured?: boolean | null;
+  downloadCount?: number | null;
+  publishedAt?: string | null;
+  /**
+   * When enabled, the slug will auto-generate from the title field on save and autosave.
+   */
+  generateSlug?: boolean | null;
+  slug: string;
+  updatedAt: string;
+  createdAt: string;
+  _status?: ('draft' | 'published') | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "redirects".
  */
 export interface Redirect {
@@ -825,10 +905,15 @@ export interface Search {
   id: string;
   title?: string | null;
   priority?: number | null;
-  doc: {
-    relationTo: 'posts';
-    value: string | Post;
-  };
+  doc:
+    | {
+        relationTo: 'posts';
+        value: string | Post;
+      }
+    | {
+        relationTo: 'software';
+        value: string | Software;
+      };
   slug?: string | null;
   meta?: {
     title?: string | null;
@@ -969,6 +1054,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'posts';
         value: string | Post;
+      } | null)
+    | ({
+        relationTo: 'software';
+        value: string | Software;
       } | null)
     | ({
         relationTo: 'media';
@@ -1212,6 +1301,51 @@ export interface PostsSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "software_select".
+ */
+export interface SoftwareSelect<T extends boolean = true> {
+  title?: T;
+  thumbnail?: T;
+  summary?: T;
+  description?: T;
+  screenshots?:
+    | T
+    | {
+        image?: T;
+        id?: T;
+      };
+  downloadFiles?:
+    | T
+    | {
+        label?: T;
+        platform?: T;
+        fileSize?: T;
+        fileSource?: T;
+        file?: T;
+        url?: T;
+        id?: T;
+      };
+  meta?:
+    | T
+    | {
+        title?: T;
+        image?: T;
+        description?: T;
+      };
+  version?: T;
+  platform?: T;
+  categories?: T;
+  featured?: T;
+  downloadCount?: T;
+  publishedAt?: T;
+  generateSlug?: T;
+  slug?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  _status?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "media_select".
  */
 export interface MediaSelect<T extends boolean = true> {
@@ -1330,6 +1464,8 @@ export interface CategoriesSelect<T extends boolean = true> {
  */
 export interface UsersSelect<T extends boolean = true> {
   name?: T;
+  role?: T;
+  avatar?: T;
   updatedAt?: T;
   createdAt?: T;
   email?: T;
@@ -1752,6 +1888,10 @@ export interface TaskSchedulePublish {
       | ({
           relationTo: 'posts';
           value: string | Post;
+        } | null)
+      | ({
+          relationTo: 'software';
+          value: string | Software;
         } | null);
     global?: string | null;
     user?: (string | null) | User;

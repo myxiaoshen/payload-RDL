@@ -1,6 +1,7 @@
 import type { GlobalConfig } from 'payload'
 
 import { link } from '@/fields/link'
+import { isAdmin } from '@/access/isAdmin'
 import { revalidateHeader } from './hooks/revalidateHeader'
 
 export const Header: GlobalConfig = {
@@ -8,6 +9,7 @@ export const Header: GlobalConfig = {
   label: '页眉',
   access: {
     read: () => true,
+    update: isAdmin,
   },
   fields: [
     {
