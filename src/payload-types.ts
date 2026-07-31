@@ -73,12 +73,17 @@ export interface Config {
     software: Software;
     media: Media;
     categories: Category;
+    'software-categories': SoftwareCategory;
     users: User;
     messages: Message;
     comments: Comment;
     favorites: Favorite;
     notifications: Notification;
     'notification-reads': NotificationRead;
+    'market-resources': MarketResource;
+    'market-categories': MarketCategory;
+    orders: Order;
+    'coin-transactions': CoinTransaction;
     search: Search;
     'payload-kv': PayloadKv;
     'payload-jobs': PayloadJob;
@@ -99,12 +104,17 @@ export interface Config {
     software: SoftwareSelect<false> | SoftwareSelect<true>;
     media: MediaSelect<false> | MediaSelect<true>;
     categories: CategoriesSelect<false> | CategoriesSelect<true>;
+    'software-categories': SoftwareCategoriesSelect<false> | SoftwareCategoriesSelect<true>;
     users: UsersSelect<false> | UsersSelect<true>;
     messages: MessagesSelect<false> | MessagesSelect<true>;
     comments: CommentsSelect<false> | CommentsSelect<true>;
     favorites: FavoritesSelect<false> | FavoritesSelect<true>;
     notifications: NotificationsSelect<false> | NotificationsSelect<true>;
     'notification-reads': NotificationReadsSelect<false> | NotificationReadsSelect<true>;
+    'market-resources': MarketResourcesSelect<false> | MarketResourcesSelect<true>;
+    'market-categories': MarketCategoriesSelect<false> | MarketCategoriesSelect<true>;
+    orders: OrdersSelect<false> | OrdersSelect<true>;
+    'coin-transactions': CoinTransactionsSelect<false> | CoinTransactionsSelect<true>;
     search: SearchSelect<false> | SearchSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-jobs': PayloadJobsSelect<false> | PayloadJobsSelect<true>;
@@ -434,6 +444,8 @@ export interface User {
   name?: string | null;
   role?: ('user' | 'vip' | 'admin') | null;
   avatar?: (number | null) | Media;
+  coinBalance?: number | null;
+  lastSigninAt?: string | null;
   updatedAt: string;
   createdAt: string;
   email: string;
@@ -696,7 +708,7 @@ export interface Software {
   };
   version?: string | null;
   platform?: ('windows' | 'macos' | 'linux' | 'android' | 'ios' | 'web')[] | null;
-  categories?: (number | Category)[] | null;
+  categories?: (number | SoftwareCategory)[] | null;
   featured?: boolean | null;
   downloadCount?: number | null;
   publishedAt?: string | null;
@@ -708,6 +720,22 @@ export interface Software {
   updatedAt: string;
   createdAt: string;
   _status?: ('draft' | 'published') | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "software-categories".
+ */
+export interface SoftwareCategory {
+  id: number;
+  title: string;
+  description?: string | null;
+  /**
+   * When enabled, the slug will auto-generate from the title field on save and autosave.
+   */
+  generateSlug?: boolean | null;
+  slug: string;
+  updatedAt: string;
+  createdAt: string;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -798,6 +826,106 @@ export interface NotificationRead {
   id: number;
   user: number | User;
   notification: number | Notification;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "market-resources".
+ */
+export interface MarketResource {
+  id: number;
+  title: string;
+  /**
+   * 显示在列表页的一句话简介
+   */
+  summary: string;
+  description?: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  } | null;
+  coverImage?: (number | null) | Media;
+  /**
+   * 购买成功的用户才能通过下载端点获取此地址
+   */
+  downloadFile?: {
+    fileSource?: ('url' | 'upload') | null;
+    url?: string | null;
+    file?: (number | null) | Media;
+  };
+  category?: (number | null) | MarketCategory;
+  price: number;
+  author?: (number | null) | User;
+  salesCount?: number | null;
+  status?: ('pending' | 'approved' | 'rejected') | null;
+  /**
+   * When enabled, the slug will auto-generate from the title field on save and autosave.
+   */
+  generateSlug?: boolean | null;
+  slug: string;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "market-categories".
+ */
+export interface MarketCategory {
+  id: number;
+  title: string;
+  description?: string | null;
+  /**
+   * When enabled, the slug will auto-generate from the title field on save and autosave.
+   */
+  generateSlug?: boolean | null;
+  slug: string;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "orders".
+ */
+export interface Order {
+  id: number;
+  buyer?: (number | null) | User;
+  resource?: (number | null) | MarketResource;
+  /**
+   * 下单时的快照，资源删除后仍可追溯
+   */
+  resourceTitle?: string | null;
+  seller?: (number | null) | User;
+  price: number;
+  status?: 'paid' | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "coin-transactions".
+ */
+export interface CoinTransaction {
+  id: number;
+  user?: (number | null) | User;
+  type: 'signin' | 'admin-adjust' | 'purchase-spend' | 'sale-income' | 'membership';
+  /**
+   * 正数为收入，负数为支出
+   */
+  amount: number;
+  balanceAfter?: number | null;
+  relatedOrder?: (number | null) | Order;
+  note?: string | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -977,6 +1105,10 @@ export interface PayloadLockedDocument {
         value: number | Category;
       } | null)
     | ({
+        relationTo: 'software-categories';
+        value: number | SoftwareCategory;
+      } | null)
+    | ({
         relationTo: 'users';
         value: number | User;
       } | null)
@@ -999,6 +1131,22 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'notification-reads';
         value: number | NotificationRead;
+      } | null)
+    | ({
+        relationTo: 'market-resources';
+        value: number | MarketResource;
+      } | null)
+    | ({
+        relationTo: 'market-categories';
+        value: number | MarketCategory;
+      } | null)
+    | ({
+        relationTo: 'orders';
+        value: number | Order;
+      } | null)
+    | ({
+        relationTo: 'coin-transactions';
+        value: number | CoinTransaction;
       } | null)
     | ({
         relationTo: 'search';
@@ -1390,12 +1538,26 @@ export interface CategoriesSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "software-categories_select".
+ */
+export interface SoftwareCategoriesSelect<T extends boolean = true> {
+  title?: T;
+  description?: T;
+  generateSlug?: T;
+  slug?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "users_select".
  */
 export interface UsersSelect<T extends boolean = true> {
   name?: T;
   role?: T;
   avatar?: T;
+  coinBalance?: T;
+  lastSigninAt?: T;
   updatedAt?: T;
   createdAt?: T;
   email?: T;
@@ -1472,6 +1634,72 @@ export interface NotificationsSelect<T extends boolean = true> {
 export interface NotificationReadsSelect<T extends boolean = true> {
   user?: T;
   notification?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "market-resources_select".
+ */
+export interface MarketResourcesSelect<T extends boolean = true> {
+  title?: T;
+  summary?: T;
+  description?: T;
+  coverImage?: T;
+  downloadFile?:
+    | T
+    | {
+        fileSource?: T;
+        url?: T;
+        file?: T;
+      };
+  category?: T;
+  price?: T;
+  author?: T;
+  salesCount?: T;
+  status?: T;
+  generateSlug?: T;
+  slug?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "market-categories_select".
+ */
+export interface MarketCategoriesSelect<T extends boolean = true> {
+  title?: T;
+  description?: T;
+  generateSlug?: T;
+  slug?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "orders_select".
+ */
+export interface OrdersSelect<T extends boolean = true> {
+  buyer?: T;
+  resource?: T;
+  resourceTitle?: T;
+  seller?: T;
+  price?: T;
+  status?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "coin-transactions_select".
+ */
+export interface CoinTransactionsSelect<T extends boolean = true> {
+  user?: T;
+  type?: T;
+  amount?: T;
+  balanceAfter?: T;
+  relatedOrder?: T;
+  note?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -1758,7 +1986,34 @@ export interface BannerBlock {
  * via the `definition` "CodeBlock".
  */
 export interface CodeBlock {
-  language?: ('typescript' | 'javascript' | 'css') | null;
+  language?:
+    | (
+        | 'plaintext'
+        | 'typescript'
+        | 'javascript'
+        | 'tsx'
+        | 'jsx'
+        | 'markup'
+        | 'css'
+        | 'scss'
+        | 'json'
+        | 'yaml'
+        | 'markdown'
+        | 'bash'
+        | 'powershell'
+        | 'sql'
+        | 'python'
+        | 'go'
+        | 'rust'
+        | 'java'
+        | 'csharp'
+        | 'cpp'
+        | 'php'
+        | 'ruby'
+        | 'dart'
+        | 'docker'
+      )
+    | null;
   code: string;
   id?: string | null;
   blockName?: string | null;

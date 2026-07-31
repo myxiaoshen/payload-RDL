@@ -7,7 +7,7 @@ import {
   OverviewField,
   PreviewField,
 } from '@payloadcms/plugin-seo/fields'
-import { slugField } from 'payload'
+import { slugFieldZh } from '@/fields/slug'
 
 import { authenticatedOrPublished } from '../../access/authenticatedOrPublished'
 import { isAdmin } from '../../access/isAdmin'
@@ -123,7 +123,7 @@ export const Series: CollectionConfig<'series'> = {
         position: 'sidebar',
       },
     },
-    slugField(),
+    slugFieldZh(),
   ],
   hooks: {
     beforeChange: [populatePublishedAt],

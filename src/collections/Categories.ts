@@ -2,13 +2,13 @@ import type { CollectionConfig } from 'payload'
 
 import { anyone } from '../access/anyone'
 import { isAdmin } from '../access/isAdmin'
-import { slugField } from 'payload'
+import { slugFieldZh } from '../fields/slug'
 
 export const Categories: CollectionConfig = {
   slug: 'categories',
   labels: {
-    singular: '分类',
-    plural: '分类',
+    singular: '文章分类',
+    plural: '文章分类',
   },
   access: {
     create: isAdmin,
@@ -27,7 +27,7 @@ export const Categories: CollectionConfig = {
       label: '标题',
       required: true,
     },
-    slugField({
+    slugFieldZh({
       position: undefined,
     }),
   ],

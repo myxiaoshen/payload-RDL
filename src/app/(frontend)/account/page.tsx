@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button'
 import { getCurrentUser } from '@/utilities/getCurrentUser'
 import { AccountActions } from './AccountActions'
 import { AccountActivity } from './AccountActivity'
+import { AccountMarket } from './AccountMarket'
 import { ProfileForm } from './ProfileForm'
 
 export const dynamic = 'force-dynamic'
@@ -52,6 +53,7 @@ export default async function AccountPage() {
 
       <div className="flex flex-col gap-8">
         <ProfileForm userId={String(user.id)} initialName={user.name || ''} />
+        <AccountMarket />
         <AccountActivity />
         <AccountActions userId={String(user.id)} />
       </div>

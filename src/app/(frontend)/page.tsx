@@ -36,7 +36,7 @@ export default async function HomePage() {
       sort: '-publishedAt',
     }),
     payload.find({
-      collection: 'categories',
+      collection: 'software-categories',
       depth: 0,
       limit: 12,
       sort: 'title',

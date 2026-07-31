@@ -72,6 +72,8 @@ const seed = async (): Promise<void> => {
     'series',
     'pages',
     'categories',
+    'software-categories',
+    'market-categories',
     'media',
     'messages',
     'comments',
@@ -129,18 +131,41 @@ const seed = async (): Promise<void> => {
 
   // 3) 分类 --------------------------------------------------------------
   payload.logger.info('=== 重建分类 ===')
-  const catDefs: { title: string; slug: string }[] = [
-    { title: '软件工具', slug: 'software-tools' },
+  const postCatDefs: { title: string; slug: string }[] = [
     { title: '技术资讯', slug: 'tech-news' },
     { title: '教程指南', slug: 'tutorials' },
-    { title: '效率办公', slug: 'office' },
-    { title: '设计素材', slug: 'design' },
-    { title: '开发框架', slug: 'dev-frameworks' },
+    { title: '设计灵感', slug: 'design' },
   ]
+  const softwareCatDefs: { title: string; slug: string }[] = [
+    { title: '软件工具', slug: 'software-tools' },
+    { title: '效率办公', slug: 'office' },
+    { title: '开发框架', slug: 'dev-frameworks' },
+    { title: '设计素材', slug: 'design-assets' },
+  ]
+  const marketCatDefs: { title: string; slug: string }[] = [
+    { title: '源码工程', slug: 'source-code' },
+    { title: '设计素材', slug: 'design-material' },
+    { title: '学习资料', slug: 'learning' },
+  ]
+
   const cats: Record<string, number> = {}
-  for (const def of catDefs) {
+  for (const def of postCatDefs) {
     const doc = await payload.create({ collection: 'categories', data: def, ...noRevalidate })
     cats[def.slug] = doc.id as number
+  }
+
+  const softCats: Record<string, number> = {}
+  for (const def of softwareCatDefs) {
+    const doc = await payload.create({
+      collection: 'software-categories',
+      data: def,
+      ...noRevalidate,
+    })
+    softCats[def.slug] = doc.id as number
+  }
+
+  for (const def of marketCatDefs) {
+    await payload.create({ collection: 'market-categories', data: def, ...noRevalidate })
   }
 
   // 4) 文章 --------------------------------------------------------------
@@ -192,7 +217,7 @@ const seed = async (): Promise<void> => {
   await payload.create({
     collection: 'software',
     data: {
-      ...software1({ thumbnail: iconSoft1, categoryIds: [cats['software-tools']] }),
+      ...software1({ thumbnail: iconSoft1, categoryIds: [softCats['software-tools']] }),
       screenshots: [{ image: shot1.id }, { image: shot2.id }],
     },
     ...noRevalidate,
@@ -200,7 +225,10 @@ const seed = async (): Promise<void> => {
   await payload.create({
     collection: 'software',
     data: {
-      ...software2({ thumbnail: iconSoft2, categoryIds: [cats['software-tools'], cats['design']] }),
+      ...software2({
+        thumbnail: iconSoft2,
+        categoryIds: [softCats['software-tools'], softCats['design-assets']],
+      }),
       screenshots: [{ image: shot3.id }, { image: shot4.id }],
     },
     ...noRevalidate,
@@ -219,7 +247,7 @@ const seed = async (): Promise<void> => {
       ]),
       version: '3.0.1',
       platform: ['windows'],
-      categories: [cats['office']],
+      categories: [softCats['office']],
       featured: true,
       screenshots: [{ image: shot1.id }],
       downloadFiles: [
@@ -249,7 +277,7 @@ const seed = async (): Promise<void> => {
       ]),
       version: '1.8.0',
       platform: ['windows', 'macos', 'linux', 'web'],
-      categories: [cats['office'], cats['dev-frameworks']],
+      categories: [softCats['office'], softCats['dev-frameworks']],
       featured: false,
       screenshots: [{ image: shot2.id }, { image: shot3.id }],
       downloadFiles: [

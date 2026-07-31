@@ -6,6 +6,7 @@ import { getPayload } from 'payload'
 import React from 'react'
 
 import { QueryPagination } from '@/components/QueryPagination'
+import { ResourceSearch } from '@/components/ResourceSearch'
 import { SoftwareCard } from '@/components/SoftwareCard'
 import { SoftwareFilters } from '@/components/SoftwareFilters'
 import { platformLabels } from '@/utilities/platforms'
@@ -15,18 +16,20 @@ export const dynamic = 'force-dynamic'
 const PER_PAGE = 12
 
 type Args = {
-  searchParams: Promise<{ category?: string; platform?: string; page?: string }>
+  searchParams: Promise<{ category?: string; platform?: string; page?: string; q?: string }>
 }
 
 export default async function SoftwarePage({ searchParams }: Args) {
-  const { category, platform, page } = await searchParams
+  const { category, platform, page, q } = await searchParams
   const payload = await getPayload({ config: configPromise })
 
   const currentPage = Number(page) > 0 ? Number(page) : 1
+  const keyword = q?.trim()
 
   const where: Where = {}
   if (category) where.categories = { in: [category] }
   if (platform && platform in platformLabels) where.platform = { in: [platform] }
+  if (keyword) where.title = { like: keyword }
 
   const [software, categories] = await Promise.all([
     payload.find({
@@ -39,7 +42,7 @@ export default async function SoftwarePage({ searchParams }: Args) {
       where,
     }),
     payload.find({
-      collection: 'categories',
+      collection: 'software-categories',
       depth: 0,
       limit: 100,
       sort: 'title',
@@ -54,7 +57,8 @@ export default async function SoftwarePage({ searchParams }: Args) {
         <p className="mt-2 text-muted-foreground">共 {software.totalDocs} 款软件，登录后即可下载</p>
       </header>
 
-      <div className="mb-10">
+      <div className="mb-10 flex flex-col gap-5">
+        <ResourceSearch placeholder="搜索软件名称…" />
         <SoftwareFilters
           categories={categories.docs.map((c) => ({ label: c.title, value: String(c.id) }))}
           platforms={Object.entries(platformLabels).map(([value, label]) => ({ label, value }))}

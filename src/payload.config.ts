@@ -6,18 +6,27 @@ import { buildConfig, PayloadRequest } from 'payload'
 import { fileURLToPath } from 'url'
 
 import { Categories } from './collections/Categories'
+import { CoinTransactions } from './collections/CoinTransactions'
 import { Comments } from './collections/Comments'
 import { Favorites } from './collections/Favorites'
+import { MarketCategories } from './collections/MarketCategories'
+import { MarketResources } from './collections/MarketResources'
 import { Media } from './collections/Media'
 import { Messages } from './collections/Messages'
 import { Notifications } from './collections/Notifications'
 import { NotificationReads } from './collections/NotificationReads'
+import { Orders } from './collections/Orders'
 import { Pages } from './collections/Pages'
 import { Posts } from './collections/Posts'
 import { Series } from './collections/Series'
 import { Software } from './collections/Software'
+import { SoftwareCategories } from './collections/SoftwareCategories'
 import { Users } from './collections/Users'
 import { downloadEndpoint } from './endpoints/download'
+import { buyMembershipEndpoint } from './endpoints/market/buyMembership'
+import { checkinEndpoint } from './endpoints/market/checkin'
+import { purchaseEndpoint } from './endpoints/market/purchase'
+import { resourceDownloadEndpoint } from './endpoints/market/resourceDownload'
 import { Footer } from './Footer/config'
 import { Header } from './Header/config'
 import { plugins } from './plugins'
@@ -48,7 +57,7 @@ export default buildConfig({
       beforeLogin: ['@/components/BeforeLogin'],
       // The `BeforeDashboard` component renders the 'welcome' block that you see after logging into your admin panel.
       // Feel free to delete this at any time. Simply remove the line below.
-      beforeDashboard: ['@/components/BeforeDashboard'],
+      beforeDashboard: ['@/components/BeforeDashboard', '@/components/MarketStats'],
     },
     importMap: {
       baseDir: path.resolve(dirname),
@@ -87,16 +96,27 @@ export default buildConfig({
     Software,
     Media,
     Categories,
+    SoftwareCategories,
     Users,
     Messages,
     Comments,
     Favorites,
     Notifications,
     NotificationReads,
+    MarketResources,
+    MarketCategories,
+    Orders,
+    CoinTransactions,
   ],
   //其他允许的域名添加位置
   cors: [getServerSideURL()].filter(Boolean),
-  endpoints: [downloadEndpoint],
+  endpoints: [
+    downloadEndpoint,
+    checkinEndpoint,
+    purchaseEndpoint,
+    buyMembershipEndpoint,
+    resourceDownloadEndpoint,
+  ],
   globals: [Header, Footer],
   plugins,
   secret: process.env.PAYLOAD_SECRET,

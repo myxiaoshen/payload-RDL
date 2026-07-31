@@ -9,6 +9,7 @@ import React from 'react'
 import { PostCard } from '@/components/PostCard'
 import { PostCategoryFilter } from '@/components/PostCategoryFilter'
 import { QueryPagination } from '@/components/QueryPagination'
+import { ResourceSearch } from '@/components/ResourceSearch'
 import PageClient from './page.client'
 
 export const dynamic = 'force-dynamic'
@@ -16,17 +17,19 @@ export const dynamic = 'force-dynamic'
 const PER_PAGE = 12
 
 type Args = {
-  searchParams: Promise<{ category?: string; page?: string }>
+  searchParams: Promise<{ category?: string; page?: string; q?: string }>
 }
 
 export default async function Page({ searchParams }: Args) {
-  const { category, page } = await searchParams
+  const { category, page, q } = await searchParams
   const payload = await getPayload({ config: configPromise })
 
   const currentPage = Number(page) > 0 ? Number(page) : 1
+  const keyword = q?.trim()
 
   const where: Where = {}
   if (category) where.categories = { in: [category] }
+  if (keyword) where.title = { like: keyword }
 
   const [posts, categories] = await Promise.all([
     payload.find({
@@ -68,7 +71,8 @@ export default async function Page({ searchParams }: Args) {
         </Link>
       </header>
 
-      <div className="mb-10">
+      <div className="mb-10 flex flex-col gap-5">
+        <ResourceSearch placeholder="搜索文章标题…" />
         <PostCategoryFilter
           categories={categories.docs.map((c) => ({ label: c.title, value: String(c.id) }))}
         />

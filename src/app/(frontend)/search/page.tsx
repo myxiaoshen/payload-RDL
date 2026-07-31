@@ -28,24 +28,55 @@ export default async function SearchPage({ searchParams }: Args) {
   const query = q.trim()
 
   let results: Search[] = []
+  let marketResults: {
+    id: number | string
+    title: string
+    slug?: string | null
+    summary?: string | null
+    price: number
+  }[] = []
 
   if (query) {
     const payload = await getPayload({ config: configPromise })
-    const found = await payload.find({
-      collection: 'search',
-      depth: 1,
-      limit: 50,
-      where: {
-        or: [
-          { title: { like: query } },
-          { 'meta.title': { like: query } },
-          { 'meta.description': { like: query } },
-          { slug: { like: query } },
-        ],
-      },
-    })
+    const [found, market] = await Promise.all([
+      payload.find({
+        collection: 'search',
+        depth: 1,
+        limit: 50,
+        where: {
+          or: [
+            { title: { like: query } },
+            { 'meta.title': { like: query } },
+            { 'meta.description': { like: query } },
+            { slug: { like: query } },
+          ],
+        },
+      }),
+      // 交易区资源不进搜索索引（避免待审核内容泄露），这里直接查已上架的。
+      payload.find({
+        collection: 'market-resources',
+        depth: 0,
+        limit: 20,
+        overrideAccess: false,
+        where: {
+          and: [
+            { status: { equals: 'approved' } },
+            { or: [{ title: { like: query } }, { summary: { like: query } }] },
+          ],
+        },
+      }),
+    ])
     results = found.docs as Search[]
+    marketResults = market.docs.map((doc) => ({
+      id: doc.id,
+      title: doc.title,
+      slug: doc.slug,
+      summary: doc.summary,
+      price: doc.price,
+    }))
   }
+
+  const total = results.length + marketResults.length
 
   return (
     <div className="container max-w-3xl py-24">
@@ -55,11 +86,11 @@ export default async function SearchPage({ searchParams }: Args) {
 
       {query && (
         <p className="mb-6 text-sm text-muted-foreground">
-          搜索 “{query}” ，共找到 {results.length} 条结果
+          搜索 “{query}” ，共找到 {total} 条结果
         </p>
       )}
 
-      {query && results.length === 0 && (
+      {query && total === 0 && (
         <p className="text-muted-foreground">没有找到相关内容，换个关键词试试。</p>
       )}
 
@@ -95,6 +126,25 @@ export default async function SearchPage({ searchParams }: Args) {
             </li>
           )
         })}
+        {marketResults.map((doc) => (
+          <li key={`market-${doc.id}`}>
+            <Link
+              href={`/market/${doc.slug}`}
+              className="group flex gap-4 rounded-lg border border-border p-4 transition-colors hover:border-primary"
+            >
+              <div className="min-w-0">
+                <p className="mb-1 text-xs uppercase text-muted-foreground">交易商品</p>
+                <h2 className="truncate text-lg font-semibold group-hover:text-primary">
+                  {doc.title}
+                </h2>
+                {doc.summary && (
+                  <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">{doc.summary}</p>
+                )}
+                <p className="mt-1 text-sm font-medium text-primary">{doc.price} Coin</p>
+              </div>
+            </Link>
+          </li>
+        ))}
       </ul>
     </div>
   )

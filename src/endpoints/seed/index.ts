@@ -91,7 +91,7 @@ export const seed = async ({
 
   payload.logger.info(`— Seeding categories...`)
 
-  const categoryTools = await ensureBySlug(payload, req, 'categories', 'software-tools', {
+  const categoryTools = await ensureBySlug(payload, req, 'software-categories', 'software-tools', {
     title: '软件工具',
     slug: 'software-tools',
   })

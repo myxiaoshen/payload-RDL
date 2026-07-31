@@ -1,21 +1,14 @@
 import type { CollectionConfig } from 'payload'
 
 import {
-  FixedToolbarFeature,
-  HeadingFeature,
-  HorizontalRuleFeature,
-  InlineToolbarFeature,
-  lexicalEditor,
-} from '@payloadcms/richtext-lexical'
-import { slugField } from 'payload'
-
-import {
   MetaDescriptionField,
   MetaImageField,
   MetaTitleField,
   OverviewField,
   PreviewField,
 } from '@payloadcms/plugin-seo/fields'
+
+import { slugFieldZh } from '@/fields/slug'
 
 import { authenticatedOrPublished } from '../../access/authenticatedOrPublished'
 import { authenticatedDownload } from '../../access/authenticatedDownload'
@@ -106,15 +99,6 @@ export const Software: CollectionConfig<'software'> = {
               name: 'description',
               type: 'richText',
               label: '详细介绍',
-              editor: lexicalEditor({
-                features: ({ rootFeatures }) => [
-                  ...rootFeatures,
-                  HeadingFeature({ enabledHeadingSizes: ['h2', 'h3', 'h4'] }),
-                  FixedToolbarFeature(),
-                  InlineToolbarFeature(),
-                  HorizontalRuleFeature(),
-                ],
-              }),
             },
             {
               name: 'screenshots',
@@ -253,7 +237,7 @@ export const Software: CollectionConfig<'software'> = {
       name: 'categories',
       type: 'relationship',
       label: '软件分类',
-      relationTo: 'categories',
+      relationTo: 'software-categories',
       hasMany: true,
       admin: { position: 'sidebar' },
     },
@@ -287,7 +271,7 @@ export const Software: CollectionConfig<'software'> = {
         position: 'sidebar',
       },
     },
-    slugField(),
+    slugFieldZh(),
   ],
   hooks: {
     afterChange: [revalidateSoftware],
