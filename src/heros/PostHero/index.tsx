@@ -23,7 +23,7 @@ export const PostHero: React.FC<{
               if (typeof category === 'object' && category !== null) {
                 const { title: categoryTitle } = category
 
-                const titleToUse = categoryTitle || 'Untitled category'
+                const titleToUse = categoryTitle || '未分类'
 
                 const isLast = index === categories.length - 1
 

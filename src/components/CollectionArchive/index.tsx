@@ -23,7 +23,7 @@ export const CollectionArchive: React.FC<Props> = (props) => {
               const relationTo = result.doc?.relationTo === 'software' ? 'software' : 'posts'
 
               return (
-                <div className="col-span-4" key={index}>
+                <div className="col-span-4 animate-fade-in-up xl:col-span-3" key={index}>
                   <Card className="h-full" doc={result} relationTo={relationTo} showCategories />
                 </div>
               )

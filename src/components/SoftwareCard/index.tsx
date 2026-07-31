@@ -5,7 +5,7 @@ import type { Software } from '@/payload-types'
 
 import { Media } from '@/components/Media'
 import { cn } from '@/utilities/ui'
-import { platformLabel } from '@/utilities/platforms'
+import { platformBadgeClass, platformLabel } from '@/utilities/platforms'
 
 export type SoftwareCardData = Pick<
   Software,
@@ -58,7 +58,11 @@ export const SoftwareCard: React.FC<{ className?: string; doc: SoftwareCardData 
 
       <div className="mt-4 flex flex-wrap items-center gap-2">
         {platform?.map((p) => (
-          <span key={p} className="rounded-md bg-muted px-2 py-0.5 text-xs text-muted-foreground">
+          <span
+            key={p}
+            aria-label={`适用平台：${platformLabel(p)}`}
+            className={cn('rounded-md px-2 py-0.5 text-xs font-medium', platformBadgeClass(p))}
+          >
             {platformLabel(p)}
           </span>
         ))}

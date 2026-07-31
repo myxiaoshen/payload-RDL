@@ -32,14 +32,24 @@ export const Card: React.FC<{
   return (
     <article
       className={cn(
-        'border border-border rounded-lg overflow-hidden bg-card hover:cursor-pointer',
+        'group border border-border rounded-lg overflow-hidden bg-card transition-all duration-200 hover:cursor-pointer hover:border-primary/50 hover:shadow-lg',
         className,
       )}
       ref={card.ref}
     >
-      <div className="relative w-full ">
-        {!metaImage && <div className="">No image</div>}
-        {metaImage && typeof metaImage !== 'string' && <Media resource={metaImage} size="33vw" />}
+      <div className="relative w-full aspect-[16/9] bg-muted">
+        {!metaImage && (
+          <div className="flex h-full w-full items-center justify-center text-sm text-muted-foreground">
+            暂无封面
+          </div>
+        )}
+        {metaImage && typeof metaImage !== 'string' && (
+          <Media
+            resource={metaImage}
+            size="33vw"
+            imgClassName="absolute inset-0 h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+          />
+        )}
       </div>
       <div className="p-4">
         {showCategories && hasCategories && (
@@ -48,7 +58,7 @@ export const Card: React.FC<{
               if (typeof category === 'object') {
                 const { title: titleFromCategory } = category
 
-                const categoryTitle = titleFromCategory || 'Untitled category'
+                const categoryTitle = titleFromCategory || '未分类'
 
                 const isLast = index === categories.length - 1
 

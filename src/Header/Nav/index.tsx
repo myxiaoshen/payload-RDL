@@ -6,6 +6,7 @@ import type { Header as HeaderType } from '@/payload-types'
 
 import { CMSLink } from '@/components/Link'
 import Link from 'next/link'
+import { ThemeToggle } from '@/components/ThemeToggle'
 import { HeaderAuthLinks } from './HeaderAuthLinks'
 
 export const HeaderNav: React.FC<{ data: HeaderType }> = ({ data }) => {
@@ -37,6 +38,7 @@ export const HeaderNav: React.FC<{ data: HeaderType }> = ({ data }) => {
       <Link href="/search" className="text-sm hover:text-primary" aria-label="搜索">
         搜索
       </Link>
+      <ThemeToggle />
       <HeaderAuthLinks />
     </nav>
   )

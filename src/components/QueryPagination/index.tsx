@@ -21,6 +21,9 @@ export const QueryPagination: React.FC<{ page: number; totalPages: number }> = (
 
     const qs = params.toString()
     router.push(qs ? `${pathname}?${qs}` : pathname)
+    if (typeof window !== 'undefined') {
+      window.scrollTo({ top: 0, behavior: 'smooth' })
+    }
   }
 
   return (
