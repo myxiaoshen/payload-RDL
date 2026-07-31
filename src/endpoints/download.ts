@@ -1,5 +1,7 @@
 import type { Endpoint, PayloadRequest } from 'payload'
 
+import { hasRoleLevel, ROLE_LABEL } from '@/access/roleHierarchy'
+
 type DownloadBody = {
   softwareId?: string
   fileIndex?: number
@@ -50,6 +52,12 @@ export const downloadEndpoint: Endpoint = {
 
     if (!entry) {
       return json({ error: '下载项不存在' }, 404)
+    }
+
+    const requiredRole = entry.requiredRole ?? 'user'
+
+    if (!hasRoleLevel(req.user.role, requiredRole)) {
+      return json({ error: `该下载需要「${ROLE_LABEL[requiredRole]}」及以上权限` }, 403)
     }
 
     const url =

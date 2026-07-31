@@ -1,5 +1,10 @@
-import { Field } from 'payload'
+import type { Field } from 'payload'
 
+/**
+ * Extra fields stored on each `search` index record so the frontend results page
+ * can render a rich card (title / description / image / category) and build the
+ * correct href without a second query.
+ */
 export const searchFields: Field[] = [
   {
     name: 'slug',
@@ -21,23 +26,23 @@ export const searchFields: Field[] = [
       {
         type: 'text',
         name: 'title',
-        label: 'Title',
+        label: '标题',
       },
       {
         type: 'text',
         name: 'description',
-        label: 'Description',
+        label: '描述',
       },
       {
         name: 'image',
-        label: 'Image',
+        label: '封面',
         type: 'upload',
         relationTo: 'media',
       },
     ],
   },
   {
-    label: 'Categories',
+    label: '分类',
     name: 'categories',
     type: 'array',
     admin: {
@@ -46,10 +51,6 @@ export const searchFields: Field[] = [
     fields: [
       {
         name: 'relationTo',
-        type: 'text',
-      },
-      {
-        name: 'categoryID',
         type: 'text',
       },
       {

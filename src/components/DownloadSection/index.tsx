@@ -2,15 +2,17 @@ import { LockKeyhole } from 'lucide-react'
 import Link from 'next/link'
 import React from 'react'
 
-import type { Software } from '@/payload-types'
+import type { Software, User } from '@/payload-types'
 
+import { hasRoleLevel } from '@/access/roleHierarchy'
 import { Button } from '@/components/ui/button'
 import { DownloadButtons, type DownloadItem } from './DownloadButtons'
 
 export const DownloadSection: React.FC<{
   software: Software
   isLoggedIn: boolean
-}> = ({ software, isLoggedIn }) => {
+  userRole?: User['role']
+}> = ({ software, isLoggedIn, userRole }) => {
   if (!isLoggedIn) {
     return (
       <div className="rounded-xl border border-border bg-card p-6 text-center">
@@ -34,6 +36,8 @@ export const DownloadSection: React.FC<{
       label: file.label,
       platform: file.platform,
       fileSize: file.fileSize,
+      requiredRole: file.requiredRole ?? 'user',
+      locked: !hasRoleLevel(userRole, file.requiredRole ?? 'user'),
     })) ?? []
 
   if (items.length === 0) {

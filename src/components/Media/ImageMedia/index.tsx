@@ -62,17 +62,50 @@ export const ImageMedia: React.FC<MediaProps> = (props) => {
   let height: number | undefined
   let alt = altFromProps
   let src: StaticImageData | string = srcFromProps || ''
+  // 外部 URL 图片无法走 Next.js 优化管线（远程 host 未在 remotePatterns 中），需跳过优化
+  let unoptimized = false
 
   if (!src && resource && typeof resource === 'object') {
     const { alt: altFromResource, height: fullHeight, url, width: fullWidth } = resource
+    const externalUrl = (resource as { externalUrl?: string | null }).externalUrl
 
-    width = fullWidth!
-    height = fullHeight!
     alt = altFromResource || ''
 
-    const cacheTag = resource.updatedAt
+    if (externalUrl) {
+      // 后台配置的外部图片地址优先于本地上传文件
+      src = externalUrl
+      unoptimized = /^https?:\/\//i.test(externalUrl)
+      // 外部图片无存储尺寸，给出兜底值供非 fill 布局使用
+      width = fullWidth || 1200
+      height = fullHeight || 800
+    } else {
+      width = fullWidth!
+      height = fullHeight!
 
-    src = getMediaUrl(url, cacheTag)
+      const cacheTag = resource.updatedAt
+
+      src = getMediaUrl(url, cacheTag)
+    }
+  }
+
+  // Guard against broken/missing media (e.g. a relationship pointing to a deleted
+  // Media doc). Rendering next/image with an empty src throws a console error, so we
+  // render a neutral placeholder instead.
+  if (!src) {
+    return (
+      <div
+        className={cn(
+          'flex items-center justify-center bg-muted text-xs text-muted-foreground',
+          fill ? 'absolute inset-0 h-full w-full' : 'h-48 w-full',
+          pictureClassName,
+          imgClassName,
+        )}
+        role="img"
+        aria-label={alt || '图片走丢了'}
+      >
+        图片走丢了
+      </div>
+    )
   }
 
   const loading = loadingFromProps || (!priority ? 'lazy' : undefined)
@@ -98,6 +131,7 @@ export const ImageMedia: React.FC<MediaProps> = (props) => {
         loading={loading}
         sizes={sizes}
         src={src}
+        unoptimized={unoptimized}
         width={!fill ? width : undefined}
       />
     </picture>

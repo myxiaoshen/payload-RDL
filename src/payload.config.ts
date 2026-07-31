@@ -1,13 +1,20 @@
 import { mongooseAdapter } from '@payloadcms/db-mongodb'
+import { postgresAdapter } from '@payloadcms/db-postgres'
 import sharp from 'sharp'
 import path from 'path'
 import { buildConfig, PayloadRequest } from 'payload'
 import { fileURLToPath } from 'url'
 
 import { Categories } from './collections/Categories'
+import { Comments } from './collections/Comments'
+import { Favorites } from './collections/Favorites'
 import { Media } from './collections/Media'
+import { Messages } from './collections/Messages'
+import { Notifications } from './collections/Notifications'
+import { NotificationReads } from './collections/NotificationReads'
 import { Pages } from './collections/Pages'
 import { Posts } from './collections/Posts'
+import { Series } from './collections/Series'
 import { Software } from './collections/Software'
 import { Users } from './collections/Users'
 import { downloadEndpoint } from './endpoints/download'
@@ -21,6 +28,13 @@ import { zh } from '@payloadcms/translations/languages/zh'
 
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
+
+const databaseURL = process.env.DATABASE_URL || ''
+// 根据连接串协议自动选择数据库适配器：mongodb:// 用 Mongo，其余走 Postgres。
+// 迁移期间保留两种适配器，导出用 Mongo、导入用 Postgres，迁移完成后可只保留 Postgres。
+const databaseAdapter = databaseURL.startsWith('mongodb')
+  ? mongooseAdapter({ url: databaseURL })
+  : postgresAdapter({ pool: { connectionString: databaseURL } })
 
 export default buildConfig({
   i18n: {
@@ -65,10 +79,21 @@ export default buildConfig({
   },
   // This config helps us configure global or default features that the other editors can inherit
   editor: defaultLexical,
-  db: mongooseAdapter({
-    url: process.env.DATABASE_URL || '',
-  }),
-  collections: [Pages, Posts, Software, Media, Categories, Users],
+  db: databaseAdapter,
+  collections: [
+    Pages,
+    Posts,
+    Series,
+    Software,
+    Media,
+    Categories,
+    Users,
+    Messages,
+    Comments,
+    Favorites,
+    Notifications,
+    NotificationReads,
+  ],
   //其他允许的域名添加位置
   cors: [getServerSideURL()].filter(Boolean),
   endpoints: [downloadEndpoint],

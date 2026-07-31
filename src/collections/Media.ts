@@ -9,6 +9,7 @@ import path from 'path'
 import { fileURLToPath } from 'url'
 
 import { anyone } from '../access/anyone'
+import { authenticated } from '../access/authenticated'
 import { isAdmin } from '../access/isAdmin'
 
 const filename = fileURLToPath(import.meta.url)
@@ -22,10 +23,13 @@ export const Media: CollectionConfig = {
   },
   folders: true,
   access: {
-    create: isAdmin,
+    create: authenticated,
     delete: isAdmin,
     read: anyone,
     update: isAdmin,
+  },
+  admin: {
+    group: '系统',
   },
   fields: [
     {
@@ -33,6 +37,15 @@ export const Media: CollectionConfig = {
       type: 'text',
       label: '替代文字',
       //required: true,
+    },
+    {
+      name: 'externalUrl',
+      type: 'text',
+      label: '外部图片地址',
+      admin: {
+        description:
+          '填写一个网络图片 URL（如 https://picsum.photos/800/600）。填写后前台将优先使用该地址显示，可不上传本地文件。',
+      },
     },
     {
       name: 'caption',
@@ -49,6 +62,8 @@ export const Media: CollectionConfig = {
     // Upload to the public/media directory in Next.js making them publicly accessible even outside of Payload
     staticDir: path.resolve(dirname, '../../public/media'),
     adminThumbnail: 'thumbnail',
+    // 允许仅填写外部图片地址、不上传本地文件的媒体记录
+    filesRequiredOnCreate: false,
     focalPoint: true,
     imageSizes: [
       {

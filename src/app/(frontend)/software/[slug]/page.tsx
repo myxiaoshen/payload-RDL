@@ -13,6 +13,8 @@ import { LivePreviewListener } from '@/components/LivePreviewListener'
 import { Media } from '@/components/Media'
 import RichText from '@/components/RichText'
 import { SoftwareCard } from '@/components/SoftwareCard'
+import { CommentsSection } from '@/components/Comments/CommentsSection'
+import { FavoriteButton } from '@/components/Favorites/FavoriteButton'
 import { generateMeta } from '@/utilities/generateMeta'
 import { getCurrentUser } from '@/utilities/getCurrentUser'
 import { platformLabel } from '@/utilities/platforms'
@@ -66,6 +68,9 @@ export default async function SoftwareDetail({ params: paramsPromise }: Args) {
             ))}
             <span>{software.downloadCount ?? 0} 次下载</span>
           </div>
+          <div className="mt-4">
+            <FavoriteButton relationTo="software" docId={software.id} />
+          </div>
         </div>
       </header>
 
@@ -92,7 +97,7 @@ export default async function SoftwareDetail({ params: paramsPromise }: Args) {
         </div>
 
         <aside className="lg:sticky lg:top-24 lg:self-start">
-          <DownloadSection software={software} isLoggedIn={Boolean(user)} />
+          <DownloadSection software={software} isLoggedIn={Boolean(user)} userRole={user?.role} />
         </aside>
       </div>
 
@@ -106,6 +111,8 @@ export default async function SoftwareDetail({ params: paramsPromise }: Args) {
           </div>
         </section>
       )}
+
+      <CommentsSection relationTo="software" docId={software.id} />
     </article>
   )
 }

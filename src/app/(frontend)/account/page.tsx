@@ -8,6 +8,8 @@ import { Media } from '@/components/Media'
 import { Button } from '@/components/ui/button'
 import { getCurrentUser } from '@/utilities/getCurrentUser'
 import { AccountActions } from './AccountActions'
+import { AccountActivity } from './AccountActivity'
+import { ProfileForm } from './ProfileForm'
 
 export const dynamic = 'force-dynamic'
 
@@ -35,12 +37,12 @@ export default async function AccountPage() {
           </h1>
           <p className="truncate text-sm text-muted-foreground">{user.email}</p>
           <p className="mt-1 text-xs text-muted-foreground">
-            {user.role !== 'user' ? '管理员' : '普通用户'}
+            {user.role === 'admin' ? '管理员' : user.role === 'vip' ? 'VIP 用户' : '普通用户'}
           </p>
         </div>
       </header>
 
-      {user.role !== 'user' && (
+      {user.role === 'admin' && (
         <div className="mb-8">
           <Button asChild variant="outline" size="sm">
             <Link href="/admin">进入后台管理</Link>
@@ -48,7 +50,11 @@ export default async function AccountPage() {
         </div>
       )}
 
-      <AccountActions userId={String(user.id)} />
+      <div className="flex flex-col gap-8">
+        <ProfileForm userId={String(user.id)} initialName={user.name || ''} />
+        <AccountActivity />
+        <AccountActions userId={String(user.id)} />
+      </div>
     </div>
   )
 }

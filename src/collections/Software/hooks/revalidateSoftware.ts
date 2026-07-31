@@ -1,6 +1,6 @@
 import type { CollectionAfterChangeHook, CollectionAfterDeleteHook } from 'payload'
 
-import { revalidatePath, revalidateTag } from 'next/cache'
+import { revalidatePath } from 'next/cache'
 
 import type { Software } from '../../../payload-types'
 
@@ -17,7 +17,6 @@ export const revalidateSoftware: CollectionAfterChangeHook<Software> = ({
 
       revalidatePath(path)
       revalidatePath('/software')
-      revalidateTag('software-sitemap', 'max')
     }
 
     if (previousDoc?._status === 'published' && doc._status !== 'published') {
@@ -27,7 +26,6 @@ export const revalidateSoftware: CollectionAfterChangeHook<Software> = ({
 
       revalidatePath(oldPath)
       revalidatePath('/software')
-      revalidateTag('software-sitemap', 'max')
     }
   }
 
@@ -41,7 +39,6 @@ export const revalidateDelete: CollectionAfterDeleteHook<Software> = ({
   if (!context.disableRevalidate) {
     revalidatePath(`/software/${doc?.slug}`)
     revalidatePath('/software')
-    revalidateTag('software-sitemap', 'max')
   }
 
   return doc

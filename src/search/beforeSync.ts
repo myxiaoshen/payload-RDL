@@ -1,60 +1,45 @@
-import { BeforeSync, DocToSync } from '@payloadcms/plugin-search/types'
+import type { BeforeSync } from '@payloadcms/plugin-search/types'
 
-export const beforeSyncWithSearch: BeforeSync = async ({ req, originalDoc, searchDoc }) => {
-  const {
-    doc: { relationTo: collection },
-  } = searchDoc
+// Called by plugin-search right before a source doc is synced into the `search`
+// collection. We flatten the useful display fields so the results page needs no joins.
+export const beforeSyncWithSearch: BeforeSync = async ({ originalDoc, searchDoc }) => {
+  const doc = originalDoc as {
+    slug?: string | null
+    title?: string | null
+    categories?: unknown
+    meta?: { title?: string | null; description?: string | null; image?: unknown } | null
+    excerpt?: string | null
+    shortDescription?: string | null
+  }
 
-  const { slug, id, categories, title, meta, summary } = originalDoc
+  const { slug, title, categories, meta, excerpt, shortDescription } = doc
 
-  const modifiedDoc: DocToSync = {
+  const image =
+    meta?.image && typeof meta.image === 'object' && 'id' in (meta.image as Record<string, unknown>)
+      ? (meta.image as { id: string | number }).id
+      : (meta?.image as string | number | undefined)
+
+  const mappedCategories = Array.isArray(categories)
+    ? categories
+        .map((category) => {
+          if (category && typeof category === 'object' && 'title' in category) {
+            const c = category as { relationTo?: string; title?: string }
+            return { relationTo: c.relationTo ?? 'categories', title: c.title ?? '' }
+          }
+          return null
+        })
+        .filter((c): c is { relationTo: string; title: string } => Boolean(c))
+    : []
+
+  return {
     ...searchDoc,
-    slug,
+    slug: slug ?? null,
+    title: title ?? searchDoc.title ?? null,
     meta: {
-      ...meta,
-      title: meta?.title || title,
-      image: meta?.image?.id || meta?.image,
-      description: meta?.description || summary,
+      title: meta?.title ?? title ?? '',
+      description: meta?.description ?? excerpt ?? shortDescription ?? '',
+      image: image ?? undefined,
     },
-    categories: [],
+    categories: mappedCategories,
   }
-
-  if (categories && Array.isArray(categories) && categories.length > 0) {
-    const populatedCategories: { id: string | number; title: string }[] = []
-    for (const category of categories) {
-      if (!category) {
-        continue
-      }
-
-      if (typeof category === 'object') {
-        populatedCategories.push(category)
-        continue
-      }
-
-      const doc = await req.payload.findByID({
-        collection: 'categories',
-        id: category,
-        disableErrors: true,
-        depth: 0,
-        select: { title: true },
-        req,
-      })
-
-      if (doc !== null) {
-        populatedCategories.push(doc)
-      } else {
-        console.error(
-          `Failed. Category not found when syncing collection '${collection}' with id: '${id}' to search.`,
-        )
-      }
-    }
-
-    modifiedDoc.categories = populatedCategories.map((each) => ({
-      relationTo: 'categories',
-      categoryID: String(each.id),
-      title: each.title,
-    }))
-  }
-
-  return modifiedDoc
 }

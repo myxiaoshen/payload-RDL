@@ -17,6 +17,7 @@ export const Categories: CollectionConfig = {
     update: isAdmin,
   },
   admin: {
+    group: '内容',
     useAsTitle: 'title',
   },
   fields: [

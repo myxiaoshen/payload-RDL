@@ -56,6 +56,7 @@ export const Software: CollectionConfig<'software'> = {
     downloadCount: true,
   },
   admin: {
+    group: '软件库',
     defaultColumns: ['title', 'version', 'downloadCount', 'updatedAt'],
     livePreview: {
       url: ({ data, req }) =>
@@ -167,6 +168,20 @@ export const Software: CollectionConfig<'software'> = {
                   type: 'text',
                   label: '文件大小',
                   admin: { description: '例如：32.5 MB' },
+                },
+                {
+                  name: 'requiredRole',
+                  type: 'select',
+                  label: '下载权限',
+                  defaultValue: 'user',
+                  options: [
+                    { label: '所有登录用户', value: 'user' },
+                    { label: 'VIP 用户及以上', value: 'vip' },
+                    { label: '仅管理员', value: 'admin' },
+                  ],
+                  admin: {
+                    description: '低于此等级的用户无法下载该文件',
+                  },
                 },
                 {
                   name: 'fileSource',

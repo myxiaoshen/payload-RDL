@@ -7,6 +7,9 @@ node_modules
 next-env.d.ts
 .vercel
 
+# 数据库迁移导出（含用户密码哈希等敏感数据，勿提交）
+migration-data/
+
 # Payload default media upload directory
 public/media/
 

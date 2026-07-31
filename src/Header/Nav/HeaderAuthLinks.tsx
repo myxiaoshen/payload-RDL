@@ -4,6 +4,8 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import React, { useEffect, useState } from 'react'
 
+import { NotificationBell } from '@/components/Notifications/NotificationBell'
+
 type MeUser = { id: string; email: string; role?: string | null } | null
 
 export const HeaderAuthLinks: React.FC = () => {
@@ -35,9 +37,12 @@ export const HeaderAuthLinks: React.FC = () => {
 
   if (user) {
     return (
-      <Link href="/account" className="text-sm hover:text-primary">
-        我的账户
-      </Link>
+      <div className="flex items-center gap-4">
+        <NotificationBell />
+        <Link href="/account" className="text-sm hover:text-primary">
+          我的账户
+        </Link>
+      </div>
     )
   }
 

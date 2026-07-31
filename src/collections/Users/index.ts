@@ -21,6 +21,7 @@ export const Users: CollectionConfig = {
     },
   },
   admin: {
+    group: '系统',
     defaultColumns: ['name', 'email', 'role'],
     useAsTitle: 'email',
   },
@@ -38,6 +39,7 @@ export const Users: CollectionConfig = {
       defaultValue: 'user',
       options: [
         { label: '普通用户', value: 'user' },
+        { label: 'VIP 用户', value: 'vip' },
         { label: '管理员', value: 'admin' },
       ],
       access: {
