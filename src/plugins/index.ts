@@ -10,7 +10,7 @@ import { beforeSyncWithSearch } from '@/search/beforeSync'
 import { searchFields } from '@/search/fieldOverrides'
 
 const generateTitle: GenerateTitle<Post | Page | Software> = ({ doc }) => {
-  return doc?.title ? `${doc.title} | Payload Website Template` : 'Payload Website Template'
+  return doc?.title ? `${doc.title} | Payload-RDL` : 'Payload-RDL'
 }
 
 const generateURL: GenerateURL<Post | Page | Software> = ({ doc }) => {
