@@ -1,6 +1,6 @@
 # Payload-RDL 🚀
 
-> **R**esource **D**ownload & **L**earning — 一个基于 Payload CMS 构建的资源下载与学习平台。
+> **R**esource **D**ownload & **L**earning — 一个基于 Payload CMS 构建的资源下载与学习demo。
 
 集成了 **内容发布、软件/资源下载、交易市场、会员体系、金币与签到、评论互动、消息通知** 等模块，用一套 Headless CMS 同时驱动后台管理与前台站点。
 
@@ -8,7 +8,7 @@
 
 ## 📖 项目简介
 
-Payload-RDL 是一个面向「资源下载 + 在线学习」场景的全栈应用。它以 Payload CMS 作为内容与数据中枢，前台使用 Next.js App Router 渲染，具备完整的用户体系与虚拟经济闭环：
+Payload-RDL 是一个面向「资源下载 + demo」场景的全栈应用。它以 Payload CMS 作为内容与数据中枢，前台使用 Next.js App Router 渲染，具备完整的用户体系与虚拟经济闭环：
 
 - 📚 **内容中心**：文章（Posts）、专栏系列（Series）、页面（Pages），支持富文本、分类、SEO。
 - 💾 **软件下载**：软件库（Software）+ 分类，带受控下载端点。
