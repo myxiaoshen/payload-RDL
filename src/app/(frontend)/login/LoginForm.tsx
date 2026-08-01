@@ -4,9 +4,11 @@ import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import React, { useState } from 'react'
 
+import { CaptchaWidget } from '@/components/CaptchaWidget'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { useSecuritySettings } from '@/utilities/useSecuritySettings'
 
 /** Only allow same-site relative paths so `?redirect=` can't be used for open redirects. */
 const safeRedirect = (value: string | null) =>
@@ -16,14 +18,24 @@ export const LoginForm: React.FC = () => {
   const router = useRouter()
   const searchParams = useSearchParams()
   const redirectTo = safeRedirect(searchParams.get('redirect'))
+  const settings = useSecuritySettings()
+  // 设置未加载完成前默认按需要验证码处理，避免绕过校验。
+  const captchaRequired = settings?.userLoginCaptchaEnabled !== false
 
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [captchaTicket, setCaptchaTicket] = useState<string | undefined>()
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+
+    if (captchaRequired && !captchaTicket) {
+      setError('请先完成验证码验证')
+      return
+    }
+
     setLoading(true)
     setError(null)
 
@@ -32,11 +44,13 @@ export const LoginForm: React.FC = () => {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ email, password, captchaTicket }),
       })
 
       if (!res.ok) {
-        setError('邮箱或密码不正确')
+        const data = await res.json().catch(() => null)
+        setError(data?.errors?.[0]?.message ?? '邮箱或密码不正确')
+        setCaptchaTicket(undefined)
         return
       }
 
@@ -74,6 +88,14 @@ export const LoginForm: React.FC = () => {
           onChange={(e) => setPassword(e.target.value)}
         />
       </div>
+
+      {captchaRequired && (
+        <CaptchaWidget
+          onReset={() => setCaptchaTicket(undefined)}
+          onVerified={setCaptchaTicket}
+          scope="user-login"
+        />
+      )}
 
       {error && <p className="text-sm text-destructive">{error}</p>}
 

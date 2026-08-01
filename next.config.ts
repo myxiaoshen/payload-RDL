@@ -17,6 +17,9 @@ const nextConfig: NextConfig = {
   sassOptions: {
     loadPaths: ['./node_modules/@payloadcms/ui/dist/scss/'],
   },
+  // svg-captcha 在模块加载时用 __dirname 同步读取字体文件；打包后 __dirname 会被 Turbopack/webpack
+  // 重写成虚拟路径导致 ENOENT，必须让 Next 把它当作外部 Node 包处理，不参与打包。
+  serverExternalPackages: ['svg-captcha', 'opentype.js'],
   images: {
     localPatterns: [
       {
@@ -46,6 +49,16 @@ const nextConfig: NextConfig = {
   },
   reactStrictMode: true,
   redirects,
+  async rewrites() {
+    const adminRoute = process.env.ADMIN_ROUTE || 'admin'
+    // 自定义后台目录：把 /自定义路径/* 透明转发到真实的 /admin/* 物理路由。
+    if (adminRoute === 'admin') return []
+
+    return [
+      { source: `/${adminRoute}`, destination: '/admin' },
+      { source: `/${adminRoute}/:path*`, destination: '/admin/:path*' },
+    ]
+  },
   turbopack: {
     root: path.resolve(dirname),
   },

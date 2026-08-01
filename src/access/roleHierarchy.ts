@@ -2,15 +2,17 @@ import type { User } from '@/payload-types'
 
 export type UserRole = NonNullable<User['role']>
 
-/** 角色权限等级：数值越大权限越高。用于逐文件下载权限判定。 */
+/** 角色权限等级：数值越大权限越高。用于逐文件下载权限判定。审核员不参与下载分级，等同普通用户。 */
 export const ROLE_LEVEL: Record<UserRole, number> = {
   user: 0,
+  reviewer: 0,
   vip: 1,
   admin: 2,
 }
 
 export const ROLE_LABEL: Record<UserRole, string> = {
   user: '普通用户',
+  reviewer: '审核员',
   vip: 'VIP 用户',
   admin: '管理员',
 }

@@ -18,6 +18,7 @@
     "memory:maintain": "node scripts/memorix-maintain.mjs --apply",
     "payload": "cross-env NODE_OPTIONS=--no-deprecation payload",
     "reset:seed": "cross-env NODE_OPTIONS=\"--no-deprecation --import=tsx/esm\" node -r dotenv/config scripts/reset-and-seed.ts",
+    "seed:pages": "cross-env NODE_OPTIONS=\"--no-deprecation --import=tsx/esm\" node -r dotenv/config scripts/seed-pages.ts",
     "reinstall": "cross-env NODE_OPTIONS=--no-deprecation rm -rf node_modules && rm pnpm-lock.yaml && pnpm --ignore-workspace install",
     "start": "cross-env NODE_OPTIONS=--no-deprecation next start",
     "test": "pnpm run test:int && pnpm run test:e2e",
@@ -56,6 +57,7 @@
     "react-dom": "19.2.6",
     "react-hook-form": "7.71.1",
     "sharp": "0.34.2",
+    "svg-captcha": "^1.4.0",
     "tailwind-merge": "^3.4.0"
   },
   "devDependencies": {

@@ -17,22 +17,22 @@ export const hero: Field = {
       name: 'type',
       type: 'select',
       defaultValue: 'lowImpact',
-      label: 'Type',
+      label: '展示样式',
       options: [
         {
-          label: 'None',
+          label: '不显示（页面直接从内容板块开始）',
           value: 'none',
         },
         {
-          label: 'High Impact',
+          label: '大图横幅（整屏背景图 + 标题按钮）',
           value: 'highImpact',
         },
         {
-          label: 'Medium Impact',
+          label: '图文横幅（标题按钮在上，配图在下）',
           value: 'mediumImpact',
         },
         {
-          label: 'Low Impact',
+          label: '纯文字横幅（仅标题与简介，无配图）',
           value: 'lowImpact',
         },
       ],
@@ -51,16 +51,26 @@ export const hero: Field = {
           ]
         },
       }),
-      label: false,
+      label: '横幅文案',
+      admin: {
+        condition: (_, { type } = {}) => type !== 'none',
+        description: '第一行建议用 H1 写页面主标题，再跟一段简短介绍。',
+      },
     },
     linkGroup({
       overrides: {
+        label: '横幅按钮',
         maxRows: 2,
+        admin: {
+          condition: (_, { type } = {}) => type !== 'none',
+          description: '最多两个按钮，例如「浏览软件」「联系我们」。',
+        },
       },
     }),
     {
       name: 'media',
       type: 'upload',
+      label: '横幅配图',
       admin: {
         condition: (_, { type } = {}) => ['highImpact', 'mediumImpact'].includes(type),
       },

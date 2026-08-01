@@ -24,9 +24,9 @@ skip_merge_commits = true
 # exclude_patterns = ["*.lock", "dist/**"]
 
 [memory]
-# inject 决定每轮注入上下文的记忆量，是 token 预算的主开关；
+# inject 决定每轮注入上下文的记忆量，是 token 预算的主开关；balanced  minimal
 # 治理规约见 .github/copilot-instructions.md，体检用 pnpm memory:check。
-inject = "minimal"
+inject = "balanced"
 sync_advisory = true
 auto_cleanup = true
 formation = "active"

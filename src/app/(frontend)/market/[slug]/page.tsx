@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 
 import configPromise from '@payload-config'
+import { Crown } from 'lucide-react'
 import { notFound } from 'next/navigation'
 import { getPayload } from 'payload'
 import React, { cache } from 'react'
@@ -25,8 +26,12 @@ const relId = (value: unknown): number | string | null => {
 
 export default async function MarketDetail({ params: paramsPromise }: Args) {
   const { slug = '' } = await paramsPromise
+  const decodedSlug = decodeURIComponent(slug)
 
-  const [resource, user] = await Promise.all([queryResourceBySlug({ slug }), getCurrentUser()])
+  const [resource, user] = await Promise.all([
+    queryResourceBySlug({ slug: decodedSlug }),
+    getCurrentUser(),
+  ])
 
   if (!resource) return notFound()
 
@@ -36,11 +41,13 @@ export default async function MarketDetail({ params: paramsPromise }: Args) {
       ? resource.author.name || resource.author.email || '匿名'
       : '匿名'
 
+  const isMembership = resource.productType === 'membership'
+
   const isOwnerOrAdmin =
     Boolean(user) && (user!.role === 'admin' || String(authorId) === String(user!.id))
 
-  let owned = isOwnerOrAdmin
-  if (user && !owned) {
+  let owned = isMembership ? user?.role === 'vip' || user?.role === 'admin' : isOwnerOrAdmin
+  if (user && !owned && !isMembership) {
     const payload = await getPayload({ config: configPromise })
     const order = await payload.find({
       collection: 'orders',
@@ -77,7 +84,14 @@ export default async function MarketDetail({ params: paramsPromise }: Args) {
           <h1 className="text-3xl font-bold tracking-tight md:text-4xl">{resource.title}</h1>
           <p className="mt-2 text-muted-foreground">{resource.summary}</p>
           <div className="mt-3 flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
-            <span>作者：{authorName}</span>
+            {isMembership ? (
+              <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-medium text-amber-700 dark:bg-amber-900/40 dark:text-amber-400">
+                <Crown className="size-3.5" />
+                VIP 会员权益
+              </span>
+            ) : (
+              <span>作者：{authorName}</span>
+            )}
             <span>销量 {resource.salesCount ?? 0}</span>
           </div>
         </div>
@@ -101,6 +115,7 @@ export default async function MarketDetail({ params: paramsPromise }: Args) {
               price={resource.price}
               isLoggedIn={Boolean(user)}
               owned={owned}
+              isMembership={isMembership}
             />
           </div>
         </aside>
@@ -111,7 +126,7 @@ export default async function MarketDetail({ params: paramsPromise }: Args) {
 
 export async function generateMetadata({ params: paramsPromise }: Args): Promise<Metadata> {
   const { slug = '' } = await paramsPromise
-  const resource = await queryResourceBySlug({ slug })
+  const resource = await queryResourceBySlug({ slug: decodeURIComponent(slug) })
 
   return {
     title: resource?.title ?? '资源',

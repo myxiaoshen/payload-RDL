@@ -4,6 +4,8 @@ import { Loader2 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import React, { useState } from 'react'
 
+import { CoverImageUpload } from '@/components/PublishForm/CoverImageUpload'
+import { MarkdownEditor } from '@/components/PublishForm/MarkdownEditor'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -24,20 +26,21 @@ export const PublishResourceForm: React.FC<{ categories: CategoryOption[] }> = (
 
     const form = new FormData(e.currentTarget)
     const category = String(form.get('category') || '')
+    const coverImage = String(form.get('coverImage') || '')
+    const description = String(form.get('description') || '').trim()
 
     const payload = {
       title: String(form.get('title') || '').trim(),
       summary: String(form.get('summary') || '').trim(),
       price: Number(form.get('price') || 0),
       category: category || undefined,
-      downloadFile: {
-        fileSource: 'url',
-        url: String(form.get('url') || '').trim(),
-      },
+      coverImage: coverImage || undefined,
+      description: description || undefined,
+      url: String(form.get('url') || '').trim(),
     }
 
     try {
-      const res = await fetch('/api/market-resources', {
+      const res = await fetch('/api/market/publish', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
@@ -45,7 +48,7 @@ export const PublishResourceForm: React.FC<{ categories: CategoryOption[] }> = (
       })
       const data = await res.json()
       if (!res.ok) {
-        setError(data?.errors?.[0]?.message ?? data?.message ?? '发布失败，请检查填写内容')
+        setError(data?.error ?? data?.errors?.[0]?.message ?? '发布失败，请检查填写内容')
         return
       }
       setDone(true)
@@ -82,6 +85,14 @@ export const PublishResourceForm: React.FC<{ categories: CategoryOption[] }> = (
         <Label htmlFor="summary">资源介绍</Label>
         <Textarea id="summary" name="summary" required maxLength={200} rows={3} />
       </div>
+
+      <CoverImageUpload name="coverImage" label="封面图（可选）" />
+
+      <MarkdownEditor
+        name="description"
+        label="资源详情"
+        description="详细介绍资源内容，支持 Markdown 格式。"
+      />
 
       <div className="grid gap-2">
         <Label htmlFor="category">分类</Label>

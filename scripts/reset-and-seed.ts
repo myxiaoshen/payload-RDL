@@ -16,6 +16,7 @@ import { getPayload } from 'payload'
 import config from '../src/payload.config'
 
 import { about } from '../src/endpoints/seed/about'
+import { featuredSoftwarePage, sevenZip } from '../src/endpoints/seed/featured-software'
 import { home } from '../src/endpoints/seed/home'
 import { messages } from '../src/endpoints/seed/messages'
 import { post1 } from '../src/endpoints/seed/post-1'
@@ -74,6 +75,7 @@ const seed = async (): Promise<void> => {
     'categories',
     'software-categories',
     'market-categories',
+    'bounty-categories',
     'media',
     'messages',
     'comments',
@@ -166,6 +168,16 @@ const seed = async (): Promise<void> => {
 
   for (const def of marketCatDefs) {
     await payload.create({ collection: 'market-categories', data: def, ...noRevalidate })
+  }
+
+  const bountyCatDefs: { title: string; slug: string }[] = [
+    { title: '求资源', slug: 'ask-resource' },
+    { title: '求教程', slug: 'ask-tutorial' },
+    { title: '求软件使用方案', slug: 'ask-solution' },
+    { title: '求设计模板', slug: 'ask-template' },
+  ]
+  for (const def of bountyCatDefs) {
+    await payload.create({ collection: 'bounty-categories', data: def, ...noRevalidate })
   }
 
   // 4) 文章 --------------------------------------------------------------
@@ -301,6 +313,11 @@ const seed = async (): Promise<void> => {
     } as RequiredDataFromCollectionSlug<'software'>,
     ...noRevalidate,
   })
+  await payload.create({
+    collection: 'software',
+    data: sevenZip({ thumbnail: iconSoft1, categoryIds: [softCats['software-tools']] }),
+    ...noRevalidate,
+  })
 
   // 6) 专题 --------------------------------------------------------------
   payload.logger.info('=== 重建专题 ===')
@@ -323,6 +340,7 @@ const seed = async (): Promise<void> => {
     ...noRevalidate,
   })
   await payload.create({ collection: 'pages', data: about, ...noRevalidate })
+  await payload.create({ collection: 'pages', data: featuredSoftwarePage, ...noRevalidate })
 
   // 8) 留言 --------------------------------------------------------------
   payload.logger.info('=== 重建留言 ===')

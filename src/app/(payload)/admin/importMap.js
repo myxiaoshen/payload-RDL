@@ -37,9 +37,13 @@ import { ReindexButton as ReindexButton_aead06e4cbf6b2620c5c51c9ab283634 } from 
 import { FolderTypeField as FolderTypeField_2b8867833a34864a02ddf429b0728a40 } from '@payloadcms/next/client'
 import { RowLabel as RowLabel_ec255a65fa6fa8d1faeb09cf35284224 } from '@/Header/RowLabel'
 import { RowLabel as RowLabel_1f6ff6ff633e3695d348f4f3c58f1466 } from '@/Footer/RowLabel'
+import { AdminRouteInfoField as AdminRouteInfoField_aad4c2163d65b48abed1837b5afeacb6 } from '@/Security/AdminRouteInfo'
+import { default as default_efee3c115af5799d6a3c68f22412cad2 } from '@/components/AdminLoginCaptcha'
 import { default as default_1a7510af427896d367a49dbf838d2de6 } from '@/components/BeforeDashboard'
 import { default as default_f086347a7ef391ca9f1fc34c11c66e88 } from '@/components/MarketStats'
 import { default as default_8a7ab0eb7ab5c511aba12e68480bfe5e } from '@/components/BeforeLogin'
+import { SiteRoutesNavLink as SiteRoutesNavLink_0250464bac56e8a3a2fdbfeee16bd439 } from '@/components/AdminSiteRoutes/NavLink'
+import { default as default_12d8398190cb24fc0f60736a7b8df671 } from '@/components/AdminSiteRoutes'
 import { CollectionCards as CollectionCards_f9c02e79a4aed9a3924487c0cd4cafb1 } from '@payloadcms/next/rsc'
 
 /** @type import('payload').ImportMap */
@@ -83,8 +87,12 @@ export const importMap = {
   "@payloadcms/next/client#FolderTypeField": FolderTypeField_2b8867833a34864a02ddf429b0728a40,
   "@/Header/RowLabel#RowLabel": RowLabel_ec255a65fa6fa8d1faeb09cf35284224,
   "@/Footer/RowLabel#RowLabel": RowLabel_1f6ff6ff633e3695d348f4f3c58f1466,
+  "@/Security/AdminRouteInfo#AdminRouteInfoField": AdminRouteInfoField_aad4c2163d65b48abed1837b5afeacb6,
+  "@/components/AdminLoginCaptcha#default": default_efee3c115af5799d6a3c68f22412cad2,
   "@/components/BeforeDashboard#default": default_1a7510af427896d367a49dbf838d2de6,
   "@/components/MarketStats#default": default_f086347a7ef391ca9f1fc34c11c66e88,
   "@/components/BeforeLogin#default": default_8a7ab0eb7ab5c511aba12e68480bfe5e,
+  "@/components/AdminSiteRoutes/NavLink#SiteRoutesNavLink": SiteRoutesNavLink_0250464bac56e8a3a2fdbfeee16bd439,
+  "@/components/AdminSiteRoutes#default": default_12d8398190cb24fc0f60736a7b8df671,
   "@payloadcms/next/rsc#CollectionCards": CollectionCards_f9c02e79a4aed9a3924487c0cd4cafb1
 }

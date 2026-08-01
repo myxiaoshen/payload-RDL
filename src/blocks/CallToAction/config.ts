@@ -12,6 +12,10 @@ import { linkGroup } from '../../fields/linkGroup'
 export const CallToAction: Block = {
   slug: 'cta',
   interfaceName: 'CallToActionBlock',
+  labels: {
+    singular: '行动号召',
+    plural: '行动号召',
+  },
   fields: [
     {
       name: 'richText',
@@ -26,17 +30,14 @@ export const CallToAction: Block = {
           ]
         },
       }),
-      label: false,
+      label: '文案',
     },
     linkGroup({
       appearances: ['default', 'outline'],
       overrides: {
+        label: '按钮',
         maxRows: 2,
       },
     }),
   ],
-  labels: {
-    plural: 'Calls to Action',
-    singular: 'Call to Action',
-  },
 }

@@ -2,22 +2,34 @@
 
 import React, { useState } from 'react'
 
+import { CaptchaWidget } from '@/components/CaptchaWidget'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
+import { useSecuritySettings } from '@/utilities/useSecuritySettings'
 
 export const ContactForm: React.FC = () => {
+  const settings = useSecuritySettings()
+  const captchaRequired = settings?.contactMessageCaptchaEnabled !== false
+
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [subject, setSubject] = useState('')
   const [message, setMessage] = useState('')
+  const [captchaTicket, setCaptchaTicket] = useState<string | undefined>()
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
   const [loading, setLoading] = useState(false)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+
+    if (captchaRequired && !captchaTicket) {
+      setError('请先完成验证码验证')
+      return
+    }
+
     setLoading(true)
     setError(null)
 
@@ -25,12 +37,13 @@ export const ContactForm: React.FC = () => {
       const res = await fetch('/api/messages', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, email, subject, message }),
+        body: JSON.stringify({ captchaTicket, email, message, name, subject }),
       })
 
       if (!res.ok) {
         const data = await res.json().catch(() => null)
         setError(data?.errors?.[0]?.message ?? '提交失败，请稍后重试')
+        setCaptchaTicket(undefined)
         return
       }
 
@@ -39,6 +52,7 @@ export const ContactForm: React.FC = () => {
       setEmail('')
       setSubject('')
       setMessage('')
+      setCaptchaTicket(undefined)
     } catch {
       setError('网络错误，请稍后重试')
     } finally {
@@ -97,6 +111,14 @@ export const ContactForm: React.FC = () => {
           onChange={(e) => setMessage(e.target.value)}
         />
       </div>
+
+      {captchaRequired && (
+        <CaptchaWidget
+          onReset={() => setCaptchaTicket(undefined)}
+          onVerified={setCaptchaTicket}
+          scope="contact-message"
+        />
+      )}
 
       {error && <p className="text-sm text-destructive">{error}</p>}
 

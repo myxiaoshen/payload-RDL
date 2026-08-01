@@ -10,6 +10,7 @@ import type {
 import type { Media } from '@/payload-types'
 
 import { about } from './about'
+import { featuredSoftwarePage, sevenZip } from './featured-software'
 import { home } from './home'
 import { image1 } from './image-1'
 import { image2 } from './image-2'
@@ -158,6 +159,13 @@ export const seed = async ({
     'pixel-image-editor',
     software2({ thumbnail: image2Doc, categoryIds: [categoryTools.id] }),
   )
+  await ensureBySlug(
+    payload,
+    req,
+    'software',
+    '7-zip',
+    sevenZip({ thumbnail: image1Doc, categoryIds: [categoryTools.id] }),
+  )
 
   payload.logger.info(`— Seeding series...`)
 
@@ -186,6 +194,7 @@ export const seed = async ({
     home({ heroImage: imageHomeDoc, metaImage: image2Doc }),
   )
   await ensureBySlug(payload, req, 'pages', 'about', about)
+  await ensureBySlug(payload, req, 'pages', 'featured-software', featuredSoftwarePage)
 
   payload.logger.info(`— Seeding sample messages...`)
 

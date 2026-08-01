@@ -40,13 +40,14 @@ export const MarketResources: CollectionConfig<'market-resources'> = {
     summary: true,
     coverImage: true,
     price: true,
+    productType: true,
     salesCount: true,
     author: true,
     status: true,
   },
   admin: {
     group: '交易市场',
-    defaultColumns: ['title', 'author', 'price', 'salesCount', 'status', 'createdAt'],
+    defaultColumns: ['title', 'productType', 'author', 'price', 'salesCount', 'status', 'createdAt'],
     useAsTitle: 'title',
   },
   fields: [
@@ -124,6 +125,25 @@ export const MarketResources: CollectionConfig<'market-resources'> = {
       admin: { position: 'sidebar' },
     },
     {
+      name: 'productType',
+      type: 'select',
+      label: '商品类型',
+      defaultValue: 'normal',
+      options: [
+        { label: '普通资源', value: 'normal' },
+        { label: 'VIP 会员', value: 'membership' },
+      ],
+      access: {
+        // 仅管理员可把商品设为会员权益，避免用户自行发布「VIP」商品。
+        create: isAdminFieldLevel,
+        update: isAdminFieldLevel,
+      },
+      admin: {
+        position: 'sidebar',
+        description: '选择「VIP 会员」后，用户购买该商品即自动升级为 VIP，售价即会员价格',
+      },
+    },
+    {
       name: 'price',
       type: 'number',
       label: '售价 (Coin)',
@@ -185,7 +205,6 @@ export const MarketResources: CollectionConfig<'market-resources'> = {
             collection: 'market-resources',
             currentId: originalDoc?.id,
             req,
-            source: data.title ?? originalDoc?.title ?? '',
           })
         }
 

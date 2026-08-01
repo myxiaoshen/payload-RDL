@@ -5,6 +5,7 @@ import { isAdmin } from '../../access/isAdmin'
 import { Archive } from '../../blocks/ArchiveBlock/config'
 import { CallToAction } from '../../blocks/CallToAction/config'
 import { Content } from '../../blocks/Content/config'
+import { FeaturedSoftware } from '../../blocks/FeaturedSoftware/config'
 import { MediaBlock } from '../../blocks/MediaBlock/config'
 import { Video } from '../../blocks/Video/config'
 import { hero } from '@/heros/config'
@@ -42,6 +43,8 @@ export const Pages: CollectionConfig<'pages'> = {
   },
   admin: {
     group: '内容',
+    description:
+      '用于搭建「关于我们」「精品软件」等独立页面。页面由「主视觉 + 若干内容板块」组成，保存后访问路径为 /访问路径。',
     defaultColumns: ['title', 'slug', 'updatedAt'],
     livePreview: {
       url: ({ data, req }) =>
@@ -65,6 +68,9 @@ export const Pages: CollectionConfig<'pages'> = {
       type: 'text',
       label: '标题',
       required: true,
+      admin: {
+        description: '页面名称，同时用于浏览器标签与后台列表，例如「关于我们」。',
+      },
     },
     {
       type: 'tabs',
@@ -72,25 +78,32 @@ export const Pages: CollectionConfig<'pages'> = {
         {
           fields: [hero],
           label: '主视觉',
+          description: '页面顶部的横幅区域。不需要横幅时，把「展示样式」选为「不显示」即可。',
         },
         {
           fields: [
             {
               name: 'layout',
               type: 'blocks',
-              blocks: [CallToAction, Content, MediaBlock, Video, Archive],
-              label: '布局模块',
+              blocks: [Content, MediaBlock, Video, FeaturedSoftware, Archive, CallToAction],
+              label: '内容板块',
+              labels: { singular: '板块', plural: '板块' },
               required: true,
+              minRows: 1,
               admin: {
                 initCollapsed: true,
+                description:
+                  '点击「添加板块」按从上到下的顺序拼装页面，板块左侧可拖拽排序。至少需要一个板块。',
               },
             },
           ],
           label: '内容',
+          description: '页面正文由一个个板块堆叠而成，可自由增删和排序。',
         },
         {
           name: 'meta',
           label: 'SEO',
+          description: '搜索引擎与社交平台分享时展示的标题、描述和缩略图，可留空自动生成。',
           fields: [
             OverviewField({
               titlePath: 'meta.title',
@@ -123,6 +136,7 @@ export const Pages: CollectionConfig<'pages'> = {
       label: '发布时间',
       admin: {
         position: 'sidebar',
+        description: '留空则在首次发布时自动填入当前时间。',
       },
     },
     slugFieldZh(),

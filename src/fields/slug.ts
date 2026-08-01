@@ -1,5 +1,6 @@
-import { slugField } from 'payload'
+import { slugField, type CheckboxField, type TextField } from 'payload'
 
+import { generateRandomSlug } from '@/utilities/generateRandomSlug'
 import { slugify } from '@/utilities/slugify'
 
 type SlugFieldArgs = Parameters<typeof slugField>[0]
@@ -8,5 +9,27 @@ type SlugFieldArgs = Parameters<typeof slugField>[0]
 export const slugFieldZh = (args?: SlugFieldArgs) =>
   slugField({
     ...args,
-    slugify: ({ valueToSlugify }) => slugify(valueToSlugify),
+    slugify: () => generateRandomSlug(),
+    overrides: (field) => {
+      const checkboxField = field.fields[0] as CheckboxField
+      const slugTextField = field.fields[1] as TextField
+
+      checkboxField.defaultValue = false
+
+      slugTextField.hooks = {
+        ...slugTextField.hooks,
+        beforeValidate: [
+          ...(slugTextField.hooks?.beforeValidate ?? []),
+          ({ value }: { value?: unknown }) => {
+            if (typeof value === 'string' && value.trim()) {
+              return slugify(value)
+            }
+
+            return generateRandomSlug()
+          },
+        ],
+      }
+
+      return args?.overrides ? args.overrides(field) : field
+    },
   })

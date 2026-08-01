@@ -45,6 +45,9 @@ export const CoinTransactions: CollectionConfig = {
         { label: '购买支出', value: 'purchase-spend' },
         { label: '销售收入', value: 'sale-income' },
         { label: '购买会员', value: 'membership' },
+        { label: '悬赏冻结', value: 'bounty-escrow' },
+        { label: '悬赏奖励', value: 'bounty-reward' },
+        { label: '悬赏退款', value: 'bounty-refund' },
       ],
       admin: { readOnly: true },
     },
@@ -66,6 +69,13 @@ export const CoinTransactions: CollectionConfig = {
       type: 'relationship',
       relationTo: 'orders',
       label: '关联订单',
+      admin: { readOnly: true },
+    },
+    {
+      name: 'relatedBounty',
+      type: 'relationship',
+      relationTo: 'bounties',
+      label: '关联悬赏',
       admin: { readOnly: true },
     },
     {

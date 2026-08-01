@@ -2,6 +2,7 @@ import type { CollectionConfig } from 'payload'
 
 import { anyone } from '@/access/anyone'
 import { isAdmin, isAdminFieldLevel } from '@/access/isAdmin'
+import { getSecuritySettings, verifyCaptchaTicket } from '@/utilities/captcha'
 
 export const Messages: CollectionConfig = {
   slug: 'messages',
@@ -97,11 +98,33 @@ export const Messages: CollectionConfig = {
         position: 'sidebar',
       },
     },
+    {
+      name: 'captchaTicket',
+      type: 'text',
+      label: '验证码凭证',
+      virtual: true,
+      access: {
+        read: () => false,
+      },
+      admin: {
+        hidden: true,
+        description: '仅提交时临时使用，不落库。',
+      },
+    },
   ],
   hooks: {
     beforeValidate: [
-      ({ data }) => {
+      async ({ data, req }) => {
         if (!data || typeof data !== 'object') return data
+
+        const settings = await getSecuritySettings(req.payload)
+        if (settings.contactMessageCaptchaEnabled !== false) {
+          if (!verifyCaptchaTicket(data.captchaTicket as string | undefined, 'contact-message')) {
+            throw new Error('请先完成验证码验证')
+          }
+        }
+
+        delete data.captchaTicket
 
         return {
           ...data,

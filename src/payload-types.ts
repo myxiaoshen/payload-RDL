@@ -84,6 +84,9 @@ export interface Config {
     'market-categories': MarketCategory;
     orders: Order;
     'coin-transactions': CoinTransaction;
+    bounties: Bounty;
+    'bounty-categories': BountyCategory;
+    'bounty-submissions': BountySubmission;
     search: Search;
     'payload-kv': PayloadKv;
     'payload-jobs': PayloadJob;
@@ -115,6 +118,9 @@ export interface Config {
     'market-categories': MarketCategoriesSelect<false> | MarketCategoriesSelect<true>;
     orders: OrdersSelect<false> | OrdersSelect<true>;
     'coin-transactions': CoinTransactionsSelect<false> | CoinTransactionsSelect<true>;
+    bounties: BountiesSelect<false> | BountiesSelect<true>;
+    'bounty-categories': BountyCategoriesSelect<false> | BountyCategoriesSelect<true>;
+    'bounty-submissions': BountySubmissionsSelect<false> | BountySubmissionsSelect<true>;
     search: SearchSelect<false> | SearchSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-jobs': PayloadJobsSelect<false> | PayloadJobsSelect<true>;
@@ -130,10 +136,12 @@ export interface Config {
   globals: {
     header: Header;
     footer: Footer;
+    security: Security;
   };
   globalsSelect: {
     header: HeaderSelect<false> | HeaderSelect<true>;
     footer: FooterSelect<false> | FooterSelect<true>;
+    security: SecuritySelect<false> | SecuritySelect<true>;
   };
   locale: null;
   widgets: {
@@ -170,14 +178,22 @@ export interface UserAuthOperations {
   };
 }
 /**
+ * 用于搭建「关于我们」「精品软件」等独立页面。页面由「主视觉 + 若干内容板块」组成，保存后访问路径为 /访问路径。
+ *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "pages".
  */
 export interface Page {
   id: number;
+  /**
+   * 页面名称，同时用于浏览器标签与后台列表，例如「关于我们」。
+   */
   title: string;
   hero: {
     type: 'none' | 'highImpact' | 'mediumImpact' | 'lowImpact';
+    /**
+     * 第一行建议用 H1 写页面主标题，再跟一段简短介绍。
+     */
     richText?: {
       root: {
         type: string;
@@ -193,6 +209,9 @@ export interface Page {
       };
       [k: string]: unknown;
     } | null;
+    /**
+     * 最多两个按钮，例如「浏览软件」「联系我们」。
+     */
     links?:
       | {
           link: {
@@ -207,10 +226,13 @@ export interface Page {
                   relationTo: 'posts';
                   value: number | Post;
                 } | null);
+            /**
+             * 可填站内路径（如 /software）或完整网址（如 https://example.com）。
+             */
             url?: string | null;
             label: string;
             /**
-             * Choose how the link should be rendered.
+             * 选择链接在前台的展示样式。
              */
             appearance?: ('default' | 'outline') | null;
           };
@@ -219,7 +241,10 @@ export interface Page {
       | null;
     media?: (number | null) | Media;
   };
-  layout: (CallToActionBlock | ContentBlock | MediaBlock | VideoBlock | ArchiveBlock)[];
+  /**
+   * 点击「添加板块」按从上到下的顺序拼装页面，板块左侧可拖拽排序。至少需要一个板块。
+   */
+  layout: (ContentBlock | MediaBlock | VideoBlock | FeaturedSoftwareBlock | ArchiveBlock | CallToActionBlock)[];
   meta?: {
     title?: string | null;
     /**
@@ -228,6 +253,9 @@ export interface Page {
     image?: (number | null) | Media;
     description?: string | null;
   };
+  /**
+   * 留空则在首次发布时自动填入当前时间。
+   */
   publishedAt?: string | null;
   /**
    * When enabled, the slug will auto-generate from the title field on save and autosave.
@@ -442,9 +470,15 @@ export interface Category {
 export interface User {
   id: number;
   name?: string | null;
-  role?: ('user' | 'vip' | 'admin') | null;
+  role?: ('user' | 'vip' | 'reviewer' | 'admin') | null;
+  status?: ('pending' | 'approved' | 'rejected') | null;
+  /**
+   * 仅注册提交时临时使用，不落库。
+   */
+  captchaTicket?: string | null;
   avatar?: (number | null) | Media;
   coinBalance?: number | null;
+  totalEarnings?: number | null;
   lastSigninAt?: string | null;
   updatedAt: string;
   createdAt: string;
@@ -467,59 +501,17 @@ export interface User {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "CallToActionBlock".
- */
-export interface CallToActionBlock {
-  richText?: {
-    root: {
-      type: string;
-      children: {
-        type: any;
-        version: number;
-        [k: string]: unknown;
-      }[];
-      direction: ('ltr' | 'rtl') | null;
-      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
-      indent: number;
-      version: number;
-    };
-    [k: string]: unknown;
-  } | null;
-  links?:
-    | {
-        link: {
-          type?: ('reference' | 'custom') | null;
-          newTab?: boolean | null;
-          reference?:
-            | ({
-                relationTo: 'pages';
-                value: number | Page;
-              } | null)
-            | ({
-                relationTo: 'posts';
-                value: number | Post;
-              } | null);
-          url?: string | null;
-          label: string;
-          /**
-           * Choose how the link should be rendered.
-           */
-          appearance?: ('default' | 'outline') | null;
-        };
-        id?: string | null;
-      }[]
-    | null;
-  id?: string | null;
-  blockName?: string | null;
-  blockType: 'cta';
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "ContentBlock".
  */
 export interface ContentBlock {
+  /**
+   * 一个「图文内容」板块可以包含多栏，用栏宽控制分栏布局。
+   */
   columns?:
     | {
+        /**
+         * 多个小于整行的栏会自动并排在同一行。
+         */
         size?: ('oneThird' | 'half' | 'twoThirds' | 'full') | null;
         richText?: {
           root: {
@@ -549,10 +541,13 @@ export interface ContentBlock {
                 relationTo: 'posts';
                 value: number | Post;
               } | null);
+          /**
+           * 可填站内路径（如 /software）或完整网址（如 https://example.com）。
+           */
           url?: string | null;
           label: string;
           /**
-           * Choose how the link should be rendered.
+           * 选择链接在前台的展示样式。
            */
           appearance?: ('default' | 'outline') | null;
         };
@@ -568,6 +563,9 @@ export interface ContentBlock {
  * via the `definition` "MediaBlock".
  */
 export interface MediaBlock {
+  /**
+   * 从媒体库选择或直接上传，图片说明文字在媒体库的「说明」字段里编辑。
+   */
   media: number | Media;
   id?: string | null;
   blockName?: string | null;
@@ -599,9 +597,12 @@ export interface VideoBlock {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "ArchiveBlock".
+ * via the `definition` "FeaturedSoftwareBlock".
  */
-export interface ArchiveBlock {
+export interface FeaturedSoftwareBlock {
+  /**
+   * 显示在软件卡片上方，建议用 H2 写标题，再补一句简短说明。
+   */
   introContent?: {
     root: {
       type: string;
@@ -617,45 +618,36 @@ export interface ArchiveBlock {
     };
     [k: string]: unknown;
   } | null;
-  populateBy?: ('collection' | 'selection') | null;
-  relationTo?: 'posts' | null;
-  categories?: (number | Category)[] | null;
+  /**
+   * 自动筛选会随软件库更新而变化；手动指定则完全由你控制顺序。
+   */
+  populateBy: 'collection' | 'selection';
+  /**
+   * 对应软件详情页侧边栏的「精品推荐」开关。
+   */
+  onlyFeatured?: boolean | null;
+  /**
+   * 留空表示不限分类。
+   */
+  categories?: (number | SoftwareCategory)[] | null;
   limit?: number | null;
-  selectedDocs?:
-    | {
-        relationTo: 'posts';
-        value: number | Post;
-      }[]
-    | null;
+  /**
+   * 按拖拽顺序展示。
+   */
+  selectedDocs?: (number | Software)[] | null;
+  showMoreLink?: boolean | null;
   id?: string | null;
   blockName?: string | null;
-  blockType: 'archive';
+  blockType: 'featuredSoftware';
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "series".
+ * via the `definition` "software-categories".
  */
-export interface Series {
+export interface SoftwareCategory {
   id: number;
   title: string;
-  cover?: (number | null) | Media;
-  /**
-   * 显示在专题列表与详情页顶部的一段介绍
-   */
   description?: string | null;
-  /**
-   * 按此处的顺序在专题详情页展示文章
-   */
-  posts?: (number | Post)[] | null;
-  meta?: {
-    title?: string | null;
-    /**
-     * Maximum upload file size: 12MB. Recommended file size for images is <500KB.
-     */
-    image?: (number | null) | Media;
-    description?: string | null;
-  };
-  publishedAt?: string | null;
   /**
    * When enabled, the slug will auto-generate from the title field on save and autosave.
    */
@@ -663,7 +655,6 @@ export interface Series {
   slug: string;
   updatedAt: string;
   createdAt: string;
-  _status?: ('draft' | 'published') | null;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -747,12 +738,120 @@ export interface Software {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "software-categories".
+ * via the `definition` "ArchiveBlock".
  */
-export interface SoftwareCategory {
+export interface ArchiveBlock {
+  introContent?: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  } | null;
+  populateBy?: ('collection' | 'selection') | null;
+  relationTo?: 'posts' | null;
+  /**
+   * 留空表示不限分类。
+   */
+  categories?: (number | Category)[] | null;
+  limit?: number | null;
+  /**
+   * 按拖拽顺序展示。
+   */
+  selectedDocs?:
+    | {
+        relationTo: 'posts';
+        value: number | Post;
+      }[]
+    | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'archive';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "CallToActionBlock".
+ */
+export interface CallToActionBlock {
+  richText?: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  } | null;
+  links?:
+    | {
+        link: {
+          type?: ('reference' | 'custom') | null;
+          newTab?: boolean | null;
+          reference?:
+            | ({
+                relationTo: 'pages';
+                value: number | Page;
+              } | null)
+            | ({
+                relationTo: 'posts';
+                value: number | Post;
+              } | null);
+          /**
+           * 可填站内路径（如 /software）或完整网址（如 https://example.com）。
+           */
+          url?: string | null;
+          label: string;
+          /**
+           * 选择链接在前台的展示样式。
+           */
+          appearance?: ('default' | 'outline') | null;
+        };
+        id?: string | null;
+      }[]
+    | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'cta';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "series".
+ */
+export interface Series {
   id: number;
   title: string;
+  cover?: (number | null) | Media;
+  /**
+   * 显示在专题列表与详情页顶部的一段介绍
+   */
   description?: string | null;
+  /**
+   * 按此处的顺序在专题详情页展示文章
+   */
+  posts?: (number | Post)[] | null;
+  meta?: {
+    title?: string | null;
+    /**
+     * Maximum upload file size: 12MB. Recommended file size for images is <500KB.
+     */
+    image?: (number | null) | Media;
+    description?: string | null;
+  };
+  publishedAt?: string | null;
   /**
    * When enabled, the slug will auto-generate from the title field on save and autosave.
    */
@@ -760,6 +859,7 @@ export interface SoftwareCategory {
   slug: string;
   updatedAt: string;
   createdAt: string;
+  _status?: ('draft' | 'published') | null;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -778,6 +878,10 @@ export interface Message {
   message: string;
   status?: ('new' | 'processing' | 'resolved') | null;
   sourcePage?: string | null;
+  /**
+   * 仅提交时临时使用，不落库。
+   */
+  captchaTicket?: string | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -831,6 +935,10 @@ export interface Favorite {
  */
 export interface Notification {
   id: number;
+  /**
+   * 仅该用户可见；留空则按“接收对象”广播
+   */
+  user?: (number | null) | User;
   title: string;
   message: string;
   audience: 'all' | 'user' | 'vip' | 'admin';
@@ -889,6 +997,10 @@ export interface MarketResource {
     file?: (number | null) | Media;
   };
   category?: (number | null) | MarketCategory;
+  /**
+   * 选择「VIP 会员」后，用户购买该商品即自动升级为 VIP，售价即会员价格
+   */
+  productType?: ('normal' | 'membership') | null;
   price: number;
   author?: (number | null) | User;
   salesCount?: number | null;
@@ -942,14 +1054,121 @@ export interface Order {
 export interface CoinTransaction {
   id: number;
   user?: (number | null) | User;
-  type: 'signin' | 'admin-adjust' | 'purchase-spend' | 'sale-income' | 'membership';
+  type:
+    | 'signin'
+    | 'admin-adjust'
+    | 'purchase-spend'
+    | 'sale-income'
+    | 'membership'
+    | 'bounty-escrow'
+    | 'bounty-reward'
+    | 'bounty-refund';
   /**
    * 正数为收入，负数为支出
    */
   amount: number;
   balanceAfter?: number | null;
   relatedOrder?: (number | null) | Order;
+  relatedBounty?: (number | null) | Bounty;
   note?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "bounties".
+ */
+export interface Bounty {
+  id: number;
+  title: string;
+  /**
+   * 显示在列表页的一句话需求描述
+   */
+  summary: string;
+  description?: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  } | null;
+  coverImage?: (number | null) | Media;
+  category?: (number | null) | BountyCategory;
+  /**
+   * 发布时从余额冻结，采纳后发放给完成者
+   */
+  reward: number;
+  author?: (number | null) | User;
+  submissionCount?: number | null;
+  acceptedSubmission?: (number | null) | BountySubmission;
+  escrowReleased?: boolean | null;
+  deadline?: string | null;
+  status?: ('pending' | 'open' | 'fulfilled' | 'closed' | 'rejected') | null;
+  /**
+   * When enabled, the slug will auto-generate from the title field on save and autosave.
+   */
+  generateSlug?: boolean | null;
+  slug: string;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "bounty-categories".
+ */
+export interface BountyCategory {
+  id: number;
+  title: string;
+  description?: string | null;
+  /**
+   * When enabled, the slug will auto-generate from the title field on save and autosave.
+   */
+  generateSlug?: boolean | null;
+  slug: string;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "bounty-submissions".
+ */
+export interface BountySubmission {
+  id: number;
+  bounty?: (number | null) | Bounty;
+  submitter?: (number | null) | User;
+  content?: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  } | null;
+  /**
+   * 悬赏被采纳后，发起人可通过下载端点获取此地址
+   */
+  downloadFile?: {
+    fileSource?: ('url' | 'upload') | null;
+    url?: string | null;
+    file?: (number | null) | Media;
+  };
+  note?: string | null;
+  status?: ('submitted' | 'accepted' | 'rejected') | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -1173,6 +1392,18 @@ export interface PayloadLockedDocument {
         value: number | CoinTransaction;
       } | null)
     | ({
+        relationTo: 'bounties';
+        value: number | Bounty;
+      } | null)
+    | ({
+        relationTo: 'bounty-categories';
+        value: number | BountyCategory;
+      } | null)
+    | ({
+        relationTo: 'bounty-submissions';
+        value: number | BountySubmission;
+      } | null)
+    | ({
         relationTo: 'search';
         value: number | Search;
       } | null)
@@ -1253,11 +1484,12 @@ export interface PagesSelect<T extends boolean = true> {
   layout?:
     | T
     | {
-        cta?: T | CallToActionBlockSelect<T>;
         content?: T | ContentBlockSelect<T>;
         mediaBlock?: T | MediaBlockSelect<T>;
         videoBlock?: T | VideoBlockSelect<T>;
+        featuredSoftware?: T | FeaturedSoftwareBlockSelect<T>;
         archive?: T | ArchiveBlockSelect<T>;
+        cta?: T | CallToActionBlockSelect<T>;
       };
   meta?:
     | T
@@ -1272,30 +1504,6 @@ export interface PagesSelect<T extends boolean = true> {
   updatedAt?: T;
   createdAt?: T;
   _status?: T;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "CallToActionBlock_select".
- */
-export interface CallToActionBlockSelect<T extends boolean = true> {
-  richText?: T;
-  links?:
-    | T
-    | {
-        link?:
-          | T
-          | {
-              type?: T;
-              newTab?: T;
-              reference?: T;
-              url?: T;
-              label?: T;
-              appearance?: T;
-            };
-        id?: T;
-      };
-  id?: T;
-  blockName?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -1348,6 +1556,21 @@ export interface VideoBlockSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "FeaturedSoftwareBlock_select".
+ */
+export interface FeaturedSoftwareBlockSelect<T extends boolean = true> {
+  introContent?: T;
+  populateBy?: T;
+  onlyFeatured?: T;
+  categories?: T;
+  limit?: T;
+  selectedDocs?: T;
+  showMoreLink?: T;
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "ArchiveBlock_select".
  */
 export interface ArchiveBlockSelect<T extends boolean = true> {
@@ -1357,6 +1580,30 @@ export interface ArchiveBlockSelect<T extends boolean = true> {
   categories?: T;
   limit?: T;
   selectedDocs?: T;
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "CallToActionBlock_select".
+ */
+export interface CallToActionBlockSelect<T extends boolean = true> {
+  richText?: T;
+  links?:
+    | T
+    | {
+        link?:
+          | T
+          | {
+              type?: T;
+              newTab?: T;
+              reference?: T;
+              url?: T;
+              label?: T;
+              appearance?: T;
+            };
+        id?: T;
+      };
   id?: T;
   blockName?: T;
 }
@@ -1594,8 +1841,11 @@ export interface SoftwareCategoriesSelect<T extends boolean = true> {
 export interface UsersSelect<T extends boolean = true> {
   name?: T;
   role?: T;
+  status?: T;
+  captchaTicket?: T;
   avatar?: T;
   coinBalance?: T;
+  totalEarnings?: T;
   lastSigninAt?: T;
   updatedAt?: T;
   createdAt?: T;
@@ -1627,6 +1877,7 @@ export interface MessagesSelect<T extends boolean = true> {
   message?: T;
   status?: T;
   sourcePage?: T;
+  captchaTicket?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -1658,6 +1909,7 @@ export interface FavoritesSelect<T extends boolean = true> {
  * via the `definition` "notifications_select".
  */
 export interface NotificationsSelect<T extends boolean = true> {
+  user?: T;
   title?: T;
   message?: T;
   audience?: T;
@@ -1693,6 +1945,7 @@ export interface MarketResourcesSelect<T extends boolean = true> {
         file?: T;
       };
   category?: T;
+  productType?: T;
   price?: T;
   author?: T;
   salesCount?: T;
@@ -1738,7 +1991,62 @@ export interface CoinTransactionsSelect<T extends boolean = true> {
   amount?: T;
   balanceAfter?: T;
   relatedOrder?: T;
+  relatedBounty?: T;
   note?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "bounties_select".
+ */
+export interface BountiesSelect<T extends boolean = true> {
+  title?: T;
+  summary?: T;
+  description?: T;
+  coverImage?: T;
+  category?: T;
+  reward?: T;
+  author?: T;
+  submissionCount?: T;
+  acceptedSubmission?: T;
+  escrowReleased?: T;
+  deadline?: T;
+  status?: T;
+  generateSlug?: T;
+  slug?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "bounty-categories_select".
+ */
+export interface BountyCategoriesSelect<T extends boolean = true> {
+  title?: T;
+  description?: T;
+  generateSlug?: T;
+  slug?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "bounty-submissions_select".
+ */
+export interface BountySubmissionsSelect<T extends boolean = true> {
+  bounty?: T;
+  submitter?: T;
+  content?: T;
+  downloadFile?:
+    | T
+    | {
+        fileSource?: T;
+        url?: T;
+        file?: T;
+      };
+  note?: T;
+  status?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -1871,6 +2179,9 @@ export interface Header {
                 relationTo: 'posts';
                 value: number | Post;
               } | null);
+          /**
+           * 可填站内路径（如 /software）或完整网址（如 https://example.com）。
+           */
           url?: string | null;
           label: string;
         };
@@ -1900,12 +2211,42 @@ export interface Footer {
                 relationTo: 'posts';
                 value: number | Post;
               } | null);
+          /**
+           * 可填站内路径（如 /software）或完整网址（如 https://example.com）。
+           */
           url?: string | null;
           label: string;
         };
         id?: string | null;
       }[]
     | null;
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "security".
+ */
+export interface Security {
+  id: number;
+  captchaProvider?: ('builtin' | 'turnstile') | null;
+  /**
+   * 前端小组件使用，可公开。
+   */
+  captchaSiteKey?: string | null;
+  /**
+   * 服务端校验使用，仅管理员可读，不会通过公开 API 返回。
+   */
+  captchaSecretKey?: string | null;
+  adminLoginCaptchaEnabled?: boolean | null;
+  userLoginCaptchaEnabled?: boolean | null;
+  userRegisterCaptchaEnabled?: boolean | null;
+  contactMessageCaptchaEnabled?: boolean | null;
+  allowRegistration?: boolean | null;
+  /**
+   * 开启后，新注册用户需审核通过才能登录。
+   */
+  requireRegistrationApproval?: boolean | null;
   updatedAt?: string | null;
   createdAt?: string | null;
 }
@@ -1951,6 +2292,24 @@ export interface FooterSelect<T extends boolean = true> {
             };
         id?: T;
       };
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "security_select".
+ */
+export interface SecuritySelect<T extends boolean = true> {
+  captchaProvider?: T;
+  captchaSiteKey?: T;
+  captchaSecretKey?: T;
+  adminLoginCaptchaEnabled?: T;
+  userLoginCaptchaEnabled?: T;
+  userRegisterCaptchaEnabled?: T;
+  contactMessageCaptchaEnabled?: T;
+  allowRegistration?: T;
+  requireRegistrationApproval?: T;
   updatedAt?: T;
   createdAt?: T;
   globalType?: T;

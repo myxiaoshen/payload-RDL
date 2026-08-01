@@ -1,6 +1,14 @@
 import type { PayloadRequest } from 'payload'
 
-export type CoinTxType = 'signin' | 'admin-adjust' | 'purchase-spend' | 'sale-income' | 'membership'
+export type CoinTxType =
+  | 'signin'
+  | 'admin-adjust'
+  | 'purchase-spend'
+  | 'sale-income'
+  | 'membership'
+  | 'bounty-escrow'
+  | 'bounty-reward'
+  | 'bounty-refund'
 
 type CoinChangeInput = {
   userId: number | string
@@ -8,6 +16,7 @@ type CoinChangeInput = {
   type: CoinTxType
   note?: string
   relatedOrder?: number | string
+  relatedBounty?: number | string
 }
 
 /**
@@ -16,7 +25,7 @@ type CoinChangeInput = {
  */
 export const applyCoinDelta = async (
   req: PayloadRequest,
-  { userId, amount, type, note, relatedOrder }: CoinChangeInput,
+  { userId, amount, type, note, relatedOrder, relatedBounty }: CoinChangeInput,
 ): Promise<number> => {
   const { payload } = req
 
@@ -36,7 +45,10 @@ export const applyCoinDelta = async (
   await payload.update({
     collection: 'users',
     id: userId,
-    data: { coinBalance: next },
+    data:
+      type === 'sale-income'
+        ? { coinBalance: next, totalEarnings: (user?.totalEarnings ?? 0) + amount }
+        : { coinBalance: next },
     depth: 0,
     overrideAccess: true,
     req,
@@ -52,6 +64,7 @@ export const applyCoinDelta = async (
       type,
       note,
       relatedOrder: relatedOrder as number | undefined,
+      relatedBounty: relatedBounty as number | undefined,
     },
     depth: 0,
     overrideAccess: true,

@@ -6,6 +6,7 @@ import React from 'react'
 
 import { Button } from '@/components/ui/button'
 import { getCurrentUser } from '@/utilities/getCurrentUser'
+import { getMembershipProduct } from '@/utilities/membership'
 
 export const dynamic = 'force-dynamic'
 
@@ -17,8 +18,9 @@ const benefits = [
 ]
 
 export default async function VipPage() {
-  const user = await getCurrentUser()
+  const [user, product] = await Promise.all([getCurrentUser(), getMembershipProduct()])
   const isVip = user?.role === 'vip' || user?.role === 'admin'
+  const productHref = product?.slug ? `/market/${product.slug}` : null
 
   return (
     <div className="container max-w-3xl py-24">
@@ -50,10 +52,28 @@ export default async function VipPage() {
           <p className="mt-2 text-sm text-muted-foreground">
             你已是 VIP 用户，可直接下载全部 VIP 资源。感谢你的支持！
           </p>
+        ) : productHref ? (
+          <>
+            <p className="mt-2 text-sm text-muted-foreground">
+              使用平台币即可自助开通，当前价格{' '}
+              <span className="font-semibold text-primary">{product!.price} Coin</span>
+              。平台币可通过每日签到、出售资源或完成悬赏获得。
+            </p>
+            <div className="mt-4 flex flex-wrap gap-2">
+              <Button asChild size="sm">
+                <Link href={productHref}>立即升级 VIP</Link>
+              </Button>
+              {!user && (
+                <Button asChild size="sm" variant="outline">
+                  <Link href="/login?redirect=/vip">登录</Link>
+                </Button>
+              )}
+            </div>
+          </>
         ) : (
           <>
             <p className="mt-2 text-sm text-muted-foreground">
-              当前 VIP 权限由管理员手动开通。请先注册并登录账户，再联系管理员为你的账户升级为 VIP。
+              管理员尚未在交易市场上架 VIP 会员商品，请先联系管理员为你的账户升级。
             </p>
             <div className="mt-4 flex flex-wrap gap-2">
               {user ? (

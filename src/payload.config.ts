@@ -6,6 +6,9 @@ import { buildConfig, PayloadRequest } from 'payload'
 import { fileURLToPath } from 'url'
 
 import { Categories } from './collections/Categories'
+import { Bounties } from './collections/Bounties'
+import { BountyCategories } from './collections/BountyCategories'
+import { BountySubmissions } from './collections/BountySubmissions'
 import { CoinTransactions } from './collections/CoinTransactions'
 import { Comments } from './collections/Comments'
 import { Favorites } from './collections/Favorites'
@@ -23,12 +26,23 @@ import { Software } from './collections/Software'
 import { SoftwareCategories } from './collections/SoftwareCategories'
 import { Users } from './collections/Users'
 import { downloadEndpoint } from './endpoints/download'
-import { buyMembershipEndpoint } from './endpoints/market/buyMembership'
+import { bountyAcceptEndpoint } from './endpoints/bounty/accept'
+import { bountyCloseEndpoint } from './endpoints/bounty/close'
+import { bountyPublishEndpoint } from './endpoints/bounty/publish'
+import { bountySubmissionDownloadEndpoint } from './endpoints/bounty/submissionDownload'
+import { bountySubmitEndpoint } from './endpoints/bounty/submit'
 import { checkinEndpoint } from './endpoints/market/checkin'
+import { marketPublishEndpoint } from './endpoints/market/publish'
 import { purchaseEndpoint } from './endpoints/market/purchase'
 import { resourceDownloadEndpoint } from './endpoints/market/resourceDownload'
+import { captchaChallengeEndpoint, captchaVerifyEndpoint } from './endpoints/captcha'
+import { registerEndpoint } from './endpoints/auth/register'
+import { reviewBountiesEndpoint } from './endpoints/review/bounties'
+import { reviewMarketResourcesEndpoint } from './endpoints/review/marketResources'
+import { reviewUsersEndpoint } from './endpoints/review/users'
 import { Footer } from './Footer/config'
 import { Header } from './Header/config'
+import { Security } from './Security/config'
 import { plugins } from './plugins'
 import { defaultLexical } from '@/fields/defaultLexical'
 import { getServerSideURL } from './utilities/getURL'
@@ -55,9 +69,19 @@ export default buildConfig({
       // The `BeforeLogin` component renders a message that you see while logging into your admin panel.
       // Feel free to delete this at any time. Simply remove the line below.
       beforeLogin: ['@/components/BeforeLogin'],
+      // 后台管理员登录验证码：读取 Security 全局设置，开启时渲染验证码并换取 Cookie 凭证。
+      afterLogin: ['@/components/AdminLoginCaptcha'],
       // The `BeforeDashboard` component renders the 'welcome' block that you see after logging into your admin panel.
       // Feel free to delete this at any time. Simply remove the line below.
       beforeDashboard: ['@/components/BeforeDashboard', '@/components/MarketStats'],
+      beforeNavLinks: ['@/components/AdminSiteRoutes/NavLink#SiteRoutesNavLink'],
+      views: {
+        siteRoutes: {
+          Component: '@/components/AdminSiteRoutes#default',
+          path: '/site-routes',
+          meta: { title: '站点路径总览' },
+        },
+      },
     },
     importMap: {
       baseDir: path.resolve(dirname),
@@ -89,6 +113,10 @@ export default buildConfig({
   // This config helps us configure global or default features that the other editors can inherit
   editor: defaultLexical,
   db: databaseAdapter,
+  routes: {
+    // 支持通过 ADMIN_ROUTE 环境变量自定义后台目录，默认仍是 /admin；配合 next.config.ts 的 rewrites 与 src/proxy.ts 生效。
+    admin: `/${process.env.ADMIN_ROUTE || 'admin'}`,
+  },
   collections: [
     Pages,
     Posts,
@@ -107,6 +135,9 @@ export default buildConfig({
     MarketCategories,
     Orders,
     CoinTransactions,
+    Bounties,
+    BountyCategories,
+    BountySubmissions,
   ],
   //其他允许的域名添加位置
   cors: [getServerSideURL()].filter(Boolean),
@@ -114,10 +145,21 @@ export default buildConfig({
     downloadEndpoint,
     checkinEndpoint,
     purchaseEndpoint,
-    buyMembershipEndpoint,
     resourceDownloadEndpoint,
+    marketPublishEndpoint,
+    bountyPublishEndpoint,
+    bountySubmitEndpoint,
+    bountyAcceptEndpoint,
+    bountyCloseEndpoint,
+    bountySubmissionDownloadEndpoint,
+    captchaChallengeEndpoint,
+    captchaVerifyEndpoint,
+    registerEndpoint,
+    reviewUsersEndpoint,
+    reviewMarketResourcesEndpoint,
+    reviewBountiesEndpoint,
   ],
-  globals: [Header, Footer],
+  globals: [Header, Footer, Security],
   plugins,
   secret: process.env.PAYLOAD_SECRET,
   sharp,

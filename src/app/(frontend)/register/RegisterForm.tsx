@@ -4,9 +4,11 @@ import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import React, { useState } from 'react'
 
+import { CaptchaWidget } from '@/components/CaptchaWidget'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { useSecuritySettings } from '@/utilities/useSecuritySettings'
 
 const safeRedirect = (value: string | null) =>
   value && /^\/(?!\/)/.test(value) ? value : '/software'
@@ -15,12 +17,16 @@ export const RegisterForm: React.FC = () => {
   const router = useRouter()
   const searchParams = useSearchParams()
   const redirectTo = safeRedirect(searchParams.get('redirect'))
+  const settings = useSecuritySettings()
+  const captchaRequired = settings?.userRegisterCaptchaEnabled !== false
 
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [confirm, setConfirm] = useState('')
+  const [captchaTicket, setCaptchaTicket] = useState<string | undefined>()
   const [error, setError] = useState<string | null>(null)
+  const [pending, setPending] = useState(false)
   const [loading, setLoading] = useState(false)
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -31,37 +37,53 @@ export const RegisterForm: React.FC = () => {
       return
     }
 
+    if (captchaRequired && !captchaTicket) {
+      setError('请先完成验证码验证')
+      return
+    }
+
     setLoading(true)
     setError(null)
 
     try {
-      const res = await fetch('/api/users', {
+      const res = await fetch('/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({ name, email, password }),
+        body: JSON.stringify({ captchaTicket, email, name, password }),
       })
 
+      const data = await res.json().catch(() => null)
+
       if (!res.ok) {
-        const data = await res.json().catch(() => null)
-        setError(data?.errors?.[0]?.message ?? '注册失败，该邮箱可能已被使用')
+        setError(data?.error ?? '注册失败，该邮箱可能已被使用')
+        setCaptchaTicket(undefined)
         return
       }
 
-      const loginRes = await fetch('/api/users/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({ email, password }),
-      })
+      if (data?.pending) {
+        setPending(true)
+        return
+      }
 
-      router.push(loginRes.ok ? redirectTo : '/login')
+      router.push(redirectTo)
       router.refresh()
     } catch {
       setError('网络错误，请稍后重试')
     } finally {
       setLoading(false)
     }
+  }
+
+  if (pending) {
+    return (
+      <div className="rounded-lg border border-border bg-muted/40 p-6 text-center">
+        <p className="font-medium">注册成功，账号正在审核中</p>
+        <p className="mt-2 text-sm text-muted-foreground">
+          审核通过后即可使用邮箱和密码登录，请耐心等待。
+        </p>
+      </div>
+    )
   }
 
   return (
@@ -114,6 +136,14 @@ export const RegisterForm: React.FC = () => {
           onChange={(e) => setConfirm(e.target.value)}
         />
       </div>
+
+      {captchaRequired && (
+        <CaptchaWidget
+          onReset={() => setCaptchaTicket(undefined)}
+          onVerified={setCaptchaTicket}
+          scope="user-register"
+        />
+      )}
 
       {error && <p className="text-sm text-destructive">{error}</p>}
 

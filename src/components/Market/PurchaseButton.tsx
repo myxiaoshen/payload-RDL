@@ -1,6 +1,6 @@
 'use client'
 
-import { Download, Loader2, ShoppingCart } from 'lucide-react'
+import { Crown, Download, Loader2, ShoppingCart } from 'lucide-react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import React, { useState } from 'react'
@@ -13,9 +13,17 @@ type Props = {
   isLoggedIn: boolean
   /** 本人发布、管理员或已购买 —— 直接可下载。 */
   owned: boolean
+  /** VIP 会员商品：购买后自动升级角色，而非下载文件。 */
+  isMembership?: boolean
 }
 
-export const PurchaseButton: React.FC<Props> = ({ resourceId, price, isLoggedIn, owned }) => {
+export const PurchaseButton: React.FC<Props> = ({
+  resourceId,
+  price,
+  isLoggedIn,
+  owned,
+  isMembership = false,
+}) => {
   const router = useRouter()
   const [pending, setPending] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -73,8 +81,29 @@ export const PurchaseButton: React.FC<Props> = ({ resourceId, price, isLoggedIn,
     return (
       <div className="flex flex-col gap-3">
         <Button asChild>
-          <Link href="/login?redirect=/market">登录后购买</Link>
+          <Link href={isMembership ? '/login?redirect=/vip' : '/login?redirect=/market'}>
+            {isMembership ? '登录后升级' : '登录后购买'}
+          </Link>
         </Button>
+      </div>
+    )
+  }
+
+  if (isMembership) {
+    return (
+      <div className="flex flex-col gap-3">
+        {hasAccess ? (
+          <Button disabled>
+            <Crown />
+            你已是 VIP 会员
+          </Button>
+        ) : (
+          <Button onClick={handlePurchase} disabled={pending}>
+            {pending ? <Loader2 className="animate-spin" /> : <Crown />}
+            花费 {price} Coin 升级 VIP
+          </Button>
+        )}
+        {error && <p className="text-sm text-destructive">{error}</p>}
       </div>
     )
   }

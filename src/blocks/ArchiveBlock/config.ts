@@ -10,6 +10,10 @@ import {
 export const Archive: Block = {
   slug: 'archive',
   interfaceName: 'ArchiveBlock',
+  labels: {
+    singular: '文章列表',
+    plural: '文章列表',
+  },
   fields: [
     {
       name: 'introContent',
@@ -24,19 +28,20 @@ export const Archive: Block = {
           ]
         },
       }),
-      label: 'Intro Content',
+      label: '板块标题与简介',
     },
     {
       name: 'populateBy',
       type: 'select',
+      label: '取数方式',
       defaultValue: 'collection',
       options: [
         {
-          label: 'Collection',
+          label: '按条件自动筛选',
           value: 'collection',
         },
         {
-          label: 'Individual Selection',
+          label: '手动指定文章',
           value: 'selection',
         },
       ],
@@ -48,10 +53,10 @@ export const Archive: Block = {
         condition: (_, siblingData) => siblingData.populateBy === 'collection',
       },
       defaultValue: 'posts',
-      label: 'Collections To Show',
+      label: '数据来源',
       options: [
         {
-          label: 'Posts',
+          label: '文章',
           value: 'posts',
         },
       ],
@@ -61,9 +66,10 @@ export const Archive: Block = {
       type: 'relationship',
       admin: {
         condition: (_, siblingData) => siblingData.populateBy === 'collection',
+        description: '留空表示不限分类。',
       },
       hasMany: true,
-      label: 'Categories To Show',
+      label: '限定文章分类',
       relationTo: 'categories',
     },
     {
@@ -74,21 +80,18 @@ export const Archive: Block = {
         step: 1,
       },
       defaultValue: 10,
-      label: 'Limit',
+      label: '最多显示数量',
     },
     {
       name: 'selectedDocs',
       type: 'relationship',
       admin: {
         condition: (_, siblingData) => siblingData.populateBy === 'selection',
+        description: '按拖拽顺序展示。',
       },
       hasMany: true,
-      label: 'Selection',
+      label: '指定文章',
       relationTo: ['posts'],
     },
   ],
-  labels: {
-    plural: 'Archives',
-    singular: 'Archive',
-  },
 }

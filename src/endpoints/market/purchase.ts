@@ -49,8 +49,14 @@ export const purchaseEndpoint: Endpoint = {
       return json({ error: '资源不存在或未上架' }, 404)
     }
 
+    const isMembership = resource.productType === 'membership'
+
+    if (isMembership && (req.user.role === 'vip' || req.user.role === 'admin')) {
+      return json({ error: '你已拥有 VIP 权限', alreadyOwned: true }, 400)
+    }
+
     const sellerId = relId(resource.author)
-    if (sellerId != null && String(sellerId) === String(req.user.id)) {
+    if (!isMembership && sellerId != null && String(sellerId) === String(req.user.id)) {
       return json({ error: '不能购买自己发布的资源' }, 400)
     }
 
@@ -103,12 +109,13 @@ export const purchaseEndpoint: Endpoint = {
       const balance = await applyCoinDelta(req, {
         userId: req.user!.id,
         amount: -price,
-        type: 'purchase-spend',
-        note: `购买资源：${resource.title}`,
+        type: isMembership ? 'membership' : 'purchase-spend',
+        note: isMembership ? `开通会员：${resource.title}` : `购买资源：${resource.title}`,
         relatedOrder: order.id,
       })
 
-      if (price > 0 && sellerId != null) {
+      // 会员商品属于平台收入，不给发布者结算分成。
+      if (!isMembership && price > 0 && sellerId != null) {
         await applyCoinDelta(req, {
           userId: sellerId,
           amount: price,
@@ -128,7 +135,19 @@ export const purchaseEndpoint: Endpoint = {
         context: { disableRevalidate: true },
       })
 
-      return { orderId: order.id, balance }
+      if (isMembership) {
+        await req.payload.update({
+          collection: 'users',
+          id: req.user!.id,
+          data: { role: 'vip' },
+          depth: 0,
+          overrideAccess: true,
+          req,
+          context: { skipCoinLog: true, disableRevalidate: true },
+        })
+      }
+
+      return { orderId: order.id, balance, role: isMembership ? 'vip' : undefined }
     })
 
     return json(result, 200)

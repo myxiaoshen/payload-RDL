@@ -7,20 +7,24 @@ import React from 'react'
 import { Media } from '@/components/Media'
 import { Button } from '@/components/ui/button'
 import { getCurrentUser } from '@/utilities/getCurrentUser'
-import { AccountActions } from './AccountActions'
-import { AccountActivity } from './AccountActivity'
-import { AccountMarket } from './AccountMarket'
-import { ProfileForm } from './ProfileForm'
+import { getMembershipProduct } from '@/utilities/membership'
+import { AccountTabs } from './AccountTabs'
 
 export const dynamic = 'force-dynamic'
+
+const isToday = (value?: string | null) =>
+  Boolean(value) &&
+  new Date(value!).toISOString().slice(0, 10) === new Date().toISOString().slice(0, 10)
 
 export default async function AccountPage() {
   const user = await getCurrentUser()
 
   if (!user) redirect('/login?redirect=/account')
 
+  const membership = await getMembershipProduct()
+
   return (
-    <div className="container max-w-2xl py-24">
+    <div className="container max-w-3xl py-24">
       <header className="mb-10 flex items-center gap-5">
         <div className="size-16 shrink-0 overflow-hidden rounded-full bg-muted">
           {user.avatar && typeof user.avatar === 'object' ? (
@@ -46,17 +50,21 @@ export default async function AccountPage() {
       {user.role === 'admin' && (
         <div className="mb-8">
           <Button asChild variant="outline" size="sm">
-            <Link href="/admin">进入后台管理</Link>
+            <Link href={`/${process.env.ADMIN_ROUTE || 'admin'}`}>进入后台管理</Link>
           </Button>
         </div>
       )}
 
-      <div className="flex flex-col gap-8">
-        <ProfileForm userId={String(user.id)} initialName={user.name || ''} />
-        <AccountMarket />
-        <AccountActivity />
-        <AccountActions userId={String(user.id)} />
-      </div>
+      <AccountTabs
+        userId={String(user.id)}
+        initialName={user.name || ''}
+        coinBalance={user.coinBalance ?? 0}
+        totalEarnings={user.totalEarnings ?? 0}
+        role={user.role ?? 'user'}
+        signedToday={isToday(user.lastSigninAt)}
+        membershipHref={membership?.slug ? `/market/${membership.slug}` : '/vip'}
+        membershipPrice={membership?.price ?? null}
+      />
     </div>
   )
 }

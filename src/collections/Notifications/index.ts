@@ -12,12 +12,21 @@ export const Notifications: CollectionConfig = {
     create: isAdmin,
     delete: isAdmin,
     update: isAdmin,
-    // 用户只能读取面向自己（全体 或 匹配角色）且启用中的通知
+    // 用户可读：面向自己的定向通知，或面向全体/匹配角色且启用中的广播通知
     read: (({ req: { user } }) => {
       if (!user) return false
       if (user.role === 'admin') return true
       const where: Where = {
-        and: [{ isActive: { equals: true } }, { audience: { in: ['all', user.role || 'user'] } }],
+        or: [
+          { user: { equals: user.id } },
+          {
+            and: [
+              { user: { exists: false } },
+              { isActive: { equals: true } },
+              { audience: { in: ['all', user.role || 'user'] } },
+            ],
+          },
+        ],
       }
       return where
     }) as Access,
@@ -28,6 +37,14 @@ export const Notifications: CollectionConfig = {
     useAsTitle: 'title',
   },
   fields: [
+    {
+      name: 'user',
+      type: 'relationship',
+      relationTo: 'users',
+      label: '指定接收用户',
+      index: true,
+      admin: { description: '仅该用户可见；留空则按“接收对象”广播' },
+    },
     {
       name: 'title',
       type: 'text',

@@ -24,6 +24,9 @@ export const HeaderNav: React.FC<{ data: HeaderType }> = ({ data }) => {
           <Link href="/market" className="text-sm hover:text-primary">
             资源交易
           </Link>
+          <Link href="/bounty" className="text-sm hover:text-primary">
+            任务悬赏
+          </Link>
           <Link href="/posts" className="text-sm hover:text-primary">
             文章
           </Link>
