@@ -219,7 +219,7 @@ export interface Page {
       | null;
     media?: (number | null) | Media;
   };
-  layout: (CallToActionBlock | ContentBlock | MediaBlock | ArchiveBlock)[];
+  layout: (CallToActionBlock | ContentBlock | MediaBlock | VideoBlock | ArchiveBlock)[];
   meta?: {
     title?: string | null;
     /**
@@ -572,6 +572,30 @@ export interface MediaBlock {
   id?: string | null;
   blockName?: string | null;
   blockType: 'mediaBlock';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "VideoBlock".
+ */
+export interface VideoBlock {
+  source: 'url' | 'upload';
+  /**
+   * 支持 mp4/webm 等直链，也支持 YouTube、Bilibili、Vimeo 的视频页地址（会自动转换为播放器）。
+   */
+  url?: string | null;
+  /**
+   * 从媒体库选择已上传的视频文件（mp4/webm 等）。
+   */
+  media?: (number | null) | Media;
+  /**
+   * 可选。仅对直链 / 上传的视频生效，第三方播放器使用其自带封面。
+   */
+  poster?: (number | null) | Media;
+  caption?: string | null;
+  aspectRatio?: ('16/9' | '4/3' | '1/1' | '9/16') | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'videoBlock';
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -1232,6 +1256,7 @@ export interface PagesSelect<T extends boolean = true> {
         cta?: T | CallToActionBlockSelect<T>;
         content?: T | ContentBlockSelect<T>;
         mediaBlock?: T | MediaBlockSelect<T>;
+        videoBlock?: T | VideoBlockSelect<T>;
         archive?: T | ArchiveBlockSelect<T>;
       };
   meta?:
@@ -1304,6 +1329,20 @@ export interface ContentBlockSelect<T extends boolean = true> {
  */
 export interface MediaBlockSelect<T extends boolean = true> {
   media?: T;
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "VideoBlock_select".
+ */
+export interface VideoBlockSelect<T extends boolean = true> {
+  source?: T;
+  url?: T;
+  media?: T;
+  poster?: T;
+  caption?: T;
+  aspectRatio?: T;
   id?: T;
   blockName?: T;
 }

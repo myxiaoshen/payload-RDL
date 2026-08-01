@@ -29,10 +29,11 @@ import {
 import { Banner } from '@/blocks/Banner/config'
 import { Code, codeLanguages } from '@/blocks/Code/config'
 import { MediaBlock } from '@/blocks/MediaBlock/config'
+import { Video } from '@/blocks/Video/config'
 import { MarkdownPasteFeature } from '@/fields/markdownPaste'
 
 /** 富文本中可插入的区块，前台渲染见 src/components/RichText。 */
-export const richTextBlocks = [Banner, Code, MediaBlock]
+export const richTextBlocks = [Banner, Code, MediaBlock, Video]
 
 export const defaultLexical = lexicalEditor({
   features: [
