@@ -10,6 +10,7 @@ import { homeStatic } from '@/endpoints/seed/home-static'
 import { RenderBlocks } from '@/blocks/RenderBlocks'
 import { RenderHero } from '@/heros/RenderHero'
 import { generateMeta } from '@/utilities/generateMeta'
+import ContentRenderer from '@/components/ContentRenderer'
 import PageClient from './page.client'
 import { LivePreviewListener } from '@/components/LivePreviewListener'
 
@@ -65,6 +66,28 @@ export default async function Page({ params: paramsPromise }: Args) {
 
   const { hero, layout } = page
 
+  const { contentType, markdownContent, htmlContent, htmlDisplayMode } = page as {
+    contentType?: 'richText' | 'markdown' | 'html'
+    markdownContent?: string | null
+    htmlContent?: string | null
+    htmlDisplayMode?: 'embed' | 'fullscreen'
+  }
+
+  // 整页覆盖：iframe 铺满视口接管整个页面，不渲染站点主视觉与外层间距。
+  if (contentType === 'html' && htmlDisplayMode === 'fullscreen') {
+    return (
+      <>
+        <PageClient />
+        {draft && <LivePreviewListener />}
+        <ContentRenderer
+          contentType="html"
+          htmlContent={htmlContent}
+          htmlDisplayMode="fullscreen"
+        />
+      </>
+    )
+  }
+
   return (
     <article className="pt-16 pb-24">
       <PageClient />
@@ -72,7 +95,18 @@ export default async function Page({ params: paramsPromise }: Args) {
       {draft && <LivePreviewListener />}
 
       <RenderHero {...hero} />
-      <RenderBlocks blocks={layout} />
+      {contentType === 'markdown' || contentType === 'html' ? (
+        <ContentRenderer
+          className="container"
+          contentType={contentType}
+          markdownContent={markdownContent}
+          htmlContent={htmlContent}
+          htmlDisplayMode={htmlDisplayMode}
+          enableGutter={false}
+        />
+      ) : (
+        <RenderBlocks blocks={layout} />
+      )}
     </article>
   )
 }

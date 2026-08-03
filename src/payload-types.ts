@@ -242,9 +242,25 @@ export interface Page {
     media?: (number | null) | Media;
   };
   /**
+   * 选择正文编辑方式，切换后仅当前类型的内容会展示在前台。
+   */
+  contentType: 'richText' | 'markdown' | 'html';
+  /**
    * 点击「添加板块」按从上到下的顺序拼装页面，板块左侧可拖拽排序。至少需要一个板块。
    */
-  layout: (ContentBlock | MediaBlock | VideoBlock | FeaturedSoftwareBlock | ArchiveBlock | CallToActionBlock)[];
+  layout?: (ContentBlock | MediaBlock | VideoBlock | FeaturedSoftwareBlock | ArchiveBlock | CallToActionBlock)[] | null;
+  /**
+   * 直接粘贴 Markdown 文本即可，前台会自动渲染为 HTML。
+   */
+  markdownContent?: string | null;
+  /**
+   * 嵌套：HTML 作为正文嵌入当前页面；整页覆盖：HTML 铺满整个浏览器视口。
+   */
+  htmlDisplayMode?: ('embed' | 'fullscreen') | null;
+  /**
+   * 可直接粘贴完整 HTML（含 <style>/<script>），或用上方按钮上传 .html 文件。前台以 iframe 隔离渲染，CSS 与 JS 均按原样生效。
+   */
+  htmlContent?: string | null;
   meta?: {
     title?: string | null;
     /**
@@ -274,7 +290,11 @@ export interface Post {
   id: number;
   title: string;
   heroImage?: (number | null) | Media;
-  content: {
+  /**
+   * 选择正文编辑方式，切换后仅当前类型的内容会展示在前台。
+   */
+  contentType: 'richText' | 'markdown' | 'html';
+  content?: {
     root: {
       type: string;
       children: {
@@ -288,7 +308,19 @@ export interface Post {
       version: number;
     };
     [k: string]: unknown;
-  };
+  } | null;
+  /**
+   * 直接粘贴 Markdown 文本即可，前台会自动渲染为 HTML。
+   */
+  markdownContent?: string | null;
+  /**
+   * 嵌套：HTML 作为正文嵌入当前页面；整页覆盖：HTML 铺满整个浏览器视口。
+   */
+  htmlDisplayMode?: ('embed' | 'fullscreen') | null;
+  /**
+   * 可直接粘贴完整 HTML（含 <style>/<script>），或用上方按钮上传 .html 文件。前台以 iframe 隔离渲染，CSS 与 JS 均按原样生效。
+   */
+  htmlContent?: string | null;
   relatedPosts?: (number | Post)[] | null;
   categories?: (number | Category)[] | null;
   meta?: {
@@ -1481,6 +1513,7 @@ export interface PagesSelect<T extends boolean = true> {
             };
         media?: T;
       };
+  contentType?: T;
   layout?:
     | T
     | {
@@ -1491,6 +1524,9 @@ export interface PagesSelect<T extends boolean = true> {
         archive?: T | ArchiveBlockSelect<T>;
         cta?: T | CallToActionBlockSelect<T>;
       };
+  markdownContent?: T;
+  htmlDisplayMode?: T;
+  htmlContent?: T;
   meta?:
     | T
     | {
@@ -1614,7 +1650,11 @@ export interface CallToActionBlockSelect<T extends boolean = true> {
 export interface PostsSelect<T extends boolean = true> {
   title?: T;
   heroImage?: T;
+  contentType?: T;
   content?: T;
+  markdownContent?: T;
+  htmlDisplayMode?: T;
+  htmlContent?: T;
   relatedPosts?: T;
   categories?: T;
   meta?:
