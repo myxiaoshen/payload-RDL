@@ -10,7 +10,7 @@ const AdminLoginCaptcha: React.FC = () => {
   const settings = useSecuritySettings()
   const [verified, setVerified] = useState(false)
 
-  if (settings?.adminLoginCaptchaEnabled === false) return null
+  if (settings?.adminLoginCaptchaEnabled !== true) return null
 
   return (
     <div style={{ margin: '16px 0' }}>

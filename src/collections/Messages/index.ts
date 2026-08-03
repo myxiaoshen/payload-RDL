@@ -118,7 +118,7 @@ export const Messages: CollectionConfig = {
         if (!data || typeof data !== 'object') return data
 
         const settings = await getSecuritySettings(req.payload)
-        if (settings.contactMessageCaptchaEnabled !== false) {
+        if (settings.contactMessageCaptchaEnabled === true) {
           if (!verifyCaptchaTicket(data.captchaTicket as string | undefined, 'contact-message')) {
             throw new Error('请先完成验证码验证')
           }
