@@ -19,8 +19,8 @@ export const LoginForm: React.FC = () => {
   const searchParams = useSearchParams()
   const redirectTo = safeRedirect(searchParams.get('redirect'))
   const settings = useSecuritySettings()
-  // 设置未加载完成前默认按需要验证码处理，避免绕过校验。
-  const captchaRequired = settings?.userLoginCaptchaEnabled !== false
+  // 默认关闭验证码：仅在安全设置中显式开启时才显示并要求校验。
+  const captchaRequired = settings?.userLoginCaptchaEnabled === true
 
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')

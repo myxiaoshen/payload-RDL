@@ -131,7 +131,7 @@ export const Users: CollectionConfig = {
         const createdByStaff = req.user?.role === 'admin' || req.user?.role === 'reviewer'
 
         // 自助注册（非后台/审核员创建）按开关校验验证码。
-        if (!createdByStaff && settings.userRegisterCaptchaEnabled !== false) {
+        if (!createdByStaff && settings.userRegisterCaptchaEnabled === true) {
           if (!verifyCaptchaTicket(data.captchaTicket as string | undefined, 'user-register')) {
             throw new Error('请先完成验证码验证')
           }
@@ -160,7 +160,7 @@ export const Users: CollectionConfig = {
         const settings = await getSecuritySettings(req.payload)
 
         if (user.role === 'admin') {
-          if (settings.adminLoginCaptchaEnabled === false) return user
+          if (settings.adminLoginCaptchaEnabled !== true) return user
           const cookieHeader = req.headers.get('cookie') ?? ''
           const match = cookieHeader.match(/(?:^|;\s*)admin_captcha_ticket=([^;]+)/)
           const ticket = match ? decodeURIComponent(match[1]) : undefined
@@ -170,7 +170,7 @@ export const Users: CollectionConfig = {
           return user
         }
 
-        if (settings.userLoginCaptchaEnabled === false) return user
+        if (settings.userLoginCaptchaEnabled !== true) return user
         const ticket = (req.data as Record<string, unknown> | undefined)?.captchaTicket as
           string | undefined
         if (!verifyCaptchaTicket(ticket, 'user-login')) {

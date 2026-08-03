@@ -11,7 +11,7 @@ import { useSecuritySettings } from '@/utilities/useSecuritySettings'
 
 export const ContactForm: React.FC = () => {
   const settings = useSecuritySettings()
-  const captchaRequired = settings?.contactMessageCaptchaEnabled !== false
+  const captchaRequired = settings?.contactMessageCaptchaEnabled === true
 
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')

@@ -54,8 +54,6 @@ Use `memorix_resolve` when a task is done or a bug is fixed. This keeps future s
 
 记忆库允许增长，但注入上下文的量必须恒定。以下规则优先于上面的通用建议。
 
-### 固定 topicKey 词表
-
 新记忆必须落在这些前缀下，禁止自造同义前缀（同义词是记忆膨胀的头号原因）：
 
 | 前缀 | 用途 |

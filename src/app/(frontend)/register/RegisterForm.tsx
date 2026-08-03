@@ -18,7 +18,7 @@ export const RegisterForm: React.FC = () => {
   const searchParams = useSearchParams()
   const redirectTo = safeRedirect(searchParams.get('redirect'))
   const settings = useSecuritySettings()
-  const captchaRequired = settings?.userRegisterCaptchaEnabled !== false
+  const captchaRequired = settings?.userRegisterCaptchaEnabled === true
 
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
