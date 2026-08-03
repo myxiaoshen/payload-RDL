@@ -1,4 +1,4 @@
-# Payload-RDL
+#                    Payload-RDL
 
 <p align="center">
   <strong>R</strong>esource <strong>D</strong>ownload &amp; <strong>L</strong>earning — 基于 Payload CMS 构建的全栈资源下载与学习demo
@@ -155,7 +155,7 @@ cp .env.example .env   # 或手动创建，参考下方「环境变量」章节
 # 2. 生成 TypeScript 类型
 pnpm generate:types
 
-# 3. 导入种子数据（可选，会清空数据库）
+# 3. 导入种子数据（可选，会清空数据库貌似有bug没修，第一次建议不要执行）
 pnpm reset:seed
 ```
 
