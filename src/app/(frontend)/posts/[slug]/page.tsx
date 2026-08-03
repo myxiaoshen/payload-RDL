@@ -6,7 +6,7 @@ import { getPayload } from 'payload'
 import { draftMode } from 'next/headers'
 import { notFound } from 'next/navigation'
 import React, { cache } from 'react'
-import RichText from '@/components/RichText'
+import ContentRenderer from '@/components/ContentRenderer'
 
 import type { Post } from '@/payload-types'
 
@@ -65,7 +65,16 @@ export default async function Post({ params: paramsPromise }: Args) {
           <div className="mx-auto max-w-[48rem]">
             <FavoriteButton relationTo="posts" docId={post.id} />
           </div>
-          <RichText className="max-w-[48rem] mx-auto" data={post.content} enableGutter={false} />
+          <ContentRenderer
+            className="max-w-[48rem] mx-auto"
+            contentType={post.contentType}
+            content={post.content}
+            markdownContent={post.markdownContent}
+            htmlContent={post.htmlContent}
+            htmlDisplayMode={post.htmlDisplayMode}
+            enableGutter={false}
+          />
+
           {post.relatedPosts && post.relatedPosts.length > 0 && (
             <RelatedPosts
               className="mt-12 max-w-[52rem] lg:grid lg:grid-cols-subgrid col-start-1 col-span-3 grid-rows-[2fr]"

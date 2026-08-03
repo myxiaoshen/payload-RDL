@@ -10,6 +10,7 @@ import { MediaBlock } from '../../blocks/MediaBlock/config'
 import { Video } from '../../blocks/Video/config'
 import { hero } from '@/heros/config'
 import { slugFieldZh } from '@/fields/slug'
+import { contentModeExtraFields, contentTypeField, isRichTextMode } from '@/fields/contentMode'
 import { populatePublishedAt } from '../../hooks/populatePublishedAt'
 import { generatePreviewPath } from '../../utilities/generatePreviewPath'
 import { revalidateDelete, revalidatePage } from './hooks/revalidatePage'
@@ -82,6 +83,7 @@ export const Pages: CollectionConfig<'pages'> = {
         },
         {
           fields: [
+            contentTypeField({ richTextLabel: '板块布局' }),
             {
               name: 'layout',
               type: 'blocks',
@@ -92,10 +94,12 @@ export const Pages: CollectionConfig<'pages'> = {
               minRows: 1,
               admin: {
                 initCollapsed: true,
+                condition: isRichTextMode,
                 description:
                   '点击「添加板块」按从上到下的顺序拼装页面，板块左侧可拖拽排序。至少需要一个板块。',
               },
             },
+            ...contentModeExtraFields,
           ],
           label: '内容',
           description: '页面正文由一个个板块堆叠而成，可自由增删和排序。',
