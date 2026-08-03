@@ -13,7 +13,7 @@ export const HeaderNav: React.FC<{ data: HeaderType }> = ({ data }) => {
   const navItems = data?.navItems || []
 
   return (
-    <nav className="flex gap-4 items-center">
+    <nav className="flex flex-wrap items-center justify-end gap-x-3 gap-y-2 sm:gap-x-4">
       {navItems.length > 0 ? (
         navItems.map(({ link }, i) => <CMSLink key={i} {...link} appearance="link" />)
       ) : (
@@ -41,8 +41,8 @@ export const HeaderNav: React.FC<{ data: HeaderType }> = ({ data }) => {
       <Link href="/search" className="text-sm hover:text-primary" aria-label="搜索">
         搜索
       </Link>
-      <ThemeToggle />
       <HeaderAuthLinks />
+      <ThemeToggle />
     </nav>
   )
 }
