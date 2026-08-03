@@ -14,6 +14,7 @@ import {
   PreviewField,
 } from '@payloadcms/plugin-seo/fields'
 import { slugFieldZh } from '@/fields/slug'
+import { contentModeExtraFields, contentTypeField, isRichTextMode } from '@/fields/contentMode'
 
 export const Posts: CollectionConfig<'posts'> = {
   slug: 'posts',
@@ -76,12 +77,17 @@ export const Posts: CollectionConfig<'posts'> = {
               label: '封面图片',
               relationTo: 'media',
             },
+            contentTypeField({ richTextLabel: '富文本编辑器' }),
             {
               name: 'content',
               type: 'richText',
               label: false,
               required: true,
+              admin: {
+                condition: isRichTextMode,
+              },
             },
+            ...contentModeExtraFields,
           ],
           label: '内容',
         },
