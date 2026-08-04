@@ -15,6 +15,7 @@ export const post1: (args: PostArgs) => RequiredDataFromCollectionSlug<'posts'> 
   return {
     slug: 'digital-horizons',
     _status: 'published',
+    contentType: 'richText',
     authors: [author],
     content: {
       root: {

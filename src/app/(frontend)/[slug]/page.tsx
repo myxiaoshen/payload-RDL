@@ -105,7 +105,7 @@ export default async function Page({ params: paramsPromise }: Args) {
           enableGutter={false}
         />
       ) : (
-        <RenderBlocks blocks={layout} />
+        <RenderBlocks blocks={layout ?? []} />
       )}
     </article>
   )

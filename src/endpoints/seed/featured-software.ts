@@ -10,6 +10,7 @@ import { h, p, richText, ul } from './rich-text'
 export const featuredSoftwarePage: RequiredDataFromCollectionSlug<'pages'> = {
   slug: 'featured-software',
   _status: 'published',
+  contentType: 'richText',
   title: '精品软件',
   hero: {
     type: 'lowImpact',

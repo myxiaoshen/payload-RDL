@@ -9,6 +9,7 @@ export const post2: (args: PostArgs) => RequiredDataFromCollectionSlug<'posts'> 
   return {
     slug: 'global-gaze',
     _status: 'published',
+    contentType: 'richText',
     authors: [author],
     content: {
       root: {
