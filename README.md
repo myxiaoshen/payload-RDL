@@ -27,6 +27,8 @@
 - [技术栈](#-技术栈)
 - [项目结构](#-项目结构)
 - [快速开始](#-快速开始)
+- [演示账号与 Walkthrough](#-演示账号与-walkthrough)
+- [已知限制](#-已知限制)
 - [环境变量](#-环境变量)
 - [部署](#-部署)
 - [开发指南](#-开发指南)
@@ -155,9 +157,12 @@ cp .env.example .env   # 或手动创建，参考下方「环境变量」章节
 # 2. 生成 TypeScript 类型
 pnpm generate:types
 
-# 3. 导入种子数据（可选，会清空数据库貌似有bug没修，第一次建议不要执行）
+# 3. 先创建管理员（首次启动后台或通过 Payload 创建），再导入演示种子
+#    ⚠️ reset:seed 会清空业务数据，但保留 role=admin 的账号
 pnpm reset:seed
 ```
+
+> **建议顺序**：配置好 `DATABASE_URL` 与 `PAYLOAD_SECRET` → `pnpm dev` 至少成功启动一次并确保存在管理员 → 停掉或另开终端执行 `pnpm reset:seed` → 再按下方 Walkthrough 验收。
 
 ### 启动开发服务器
 
@@ -169,6 +174,49 @@ pnpm dev
 |---|---|
 | <http://localhost:3000> | 前台站点 |
 | <http://localhost:3000/admin> | Payload 后台管理 |
+
+---
+
+## 🧪 演示账号与 Walkthrough
+
+`pnpm reset:seed` 会重建内容、软件、**交易市场**、**悬赏**、订单与平台币流水，并创建下列演示用户（**密码均为 `password`**）：
+
+| 邮箱 | 角色 | 用途 |
+|---|---|---|
+| 你的管理员账号 | `admin` | 后台管理；种子会尝试将其平台币设为 500 |
+| `demo-buyer@example.com` | `user` | 买家：已购 1 个付费资源，并发起 1 个进行中悬赏（含托管流水） |
+| `demo-seller@example.com` | `user` | 卖家：有已上架/待审核资源，并对进行中悬赏有 1 份提交 |
+| `demo-reviewer@example.com` | `reviewer` | 审核员：可走资源/悬赏/用户审核队列 |
+| `demo-author@example.com` | （仅当库中无 admin 时创建） | 文章作者兜底 |
+
+### 10 分钟主路径
+
+1. **内容**：打开 `/posts`、`/topics`、`/software`，确认列表与详情可浏览。
+2. **签到**：用 `demo-buyer@example.com` 登录 → `/account` → 每日签到（同一 UTC 日仅一次，+10 平台币）。
+3. **市场购买 / 下载**：`/market` → 打开「Next.js 管理后台起步模板」（买家种子已购）→ 走下载；或用管理员购买「站点 VIP 永久会员」观察角色变为 `vip`。
+4. **零价资源**：市场中的「免费 UI 图标包」验证 0 币仍生成订单的路径。
+5. **悬赏**：`/bounty` → 打开进行中悬赏 → 卖家视角看提交；买家（发起人）可练习采纳（会发放托管）。
+6. **审核**：用审核员或管理员处理「待审核」交易资源 / 悬赏。
+7. **VIP 软件门槛**：软件「云端笔记」含 `requiredRole: vip` 的下载项，非 VIP 应被拒绝。
+
+领域用语见根目录 [CONTEXT.md](CONTEXT.md)；经济与 VIP 边界见 [docs/adr/0001-demo-virtual-economy.md](docs/adr/0001-demo-virtual-economy.md)。
+
+---
+
+## ⚠️ 已知限制
+
+本仓库定位为**开源演示模板**，不是生产收款系统：
+
+| 项目 | 现状 |
+|---|---|
+| 支付 | **仅平台币**，无真实充值 / 支付网关 |
+| VIP | 购买会员商品后 **永久** `role=vip`，无到期降级 |
+| 订单 | 成交即 `paid`，无购物车、无退款纠纷流 |
+| 通知 | 以站内通知为主，**无邮件推送** |
+| 签到日界 | 按 **UTC** 日期判断「今日是否已签」 |
+| 种子脚本 | 需已有管理员；会清空业务集合后重建（保留 admin） |
+
+规划中的评分评价、任务/成就中心等见后续迭代，不在当前种子范围内。
 
 ---
 
@@ -194,7 +242,7 @@ NEXT_PUBLIC_SERVER_URL=http://localhost:3000
 CRON_SECRET=your-cron-secret
 ```
 
----
+---清空业务数据并导入完整演示种子（保留 admin；含市场/悬赏/订单）
 
 ## 📦 部署
 
