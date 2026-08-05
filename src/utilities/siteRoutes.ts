@@ -101,6 +101,18 @@ const ROUTE_META: Record<string, RouteMeta> = {
       },
       {
         method: 'GET',
+        path: '/api/appeals?depth=1&sort=-createdAt',
+        description: '我的申诉列表',
+        auth: '需登录（本人；审核员/管理员可读全部）',
+      },
+      {
+        method: 'POST',
+        path: '/api/appeal/create',
+        description: '发起订单/悬赏申诉（Markdown 详情）',
+        auth: '需登录（订单买家 / 悬赏发起人）',
+      },
+      {
+        method: 'GET',
         path: '/api/favorites?depth=1&sort=-createdAt',
         description: '我的收藏列表',
         auth: '需登录',
@@ -113,8 +125,8 @@ const ROUTE_META: Record<string, RouteMeta> = {
       },
       {
         method: 'GET',
-        path: '/api/coin-transactions?sort=-createdAt',
-        description: '我的平台币流水',
+        path: '/api/coin-transactions?where[user][equals]={userId}&sort=-createdAt',
+        description: '我的平台币流水（admin 也必须带 where，否则会返回全站流水）',
         auth: '需登录',
       },
       {
@@ -163,6 +175,12 @@ const ROUTE_META: Record<string, RouteMeta> = {
         method: 'POST',
         path: '/api/review/comments',
         description: '审核待通过的评论（approve/reject）',
+        auth: '需审核员或管理员',
+      },
+      {
+        method: 'POST',
+        path: '/api/review/appeals',
+        description: '处理申诉（approve 填金额退币 / reject；可写处理说明）',
         auth: '需审核员或管理员',
       },
     ],
@@ -602,13 +620,37 @@ const ADMIN_ONLY_COLLECTIONS: AdminOnlyCollection[] = [
     ],
   },
   {
+    slug: 'appeals',
+    label: '申诉',
+    api: [
+      {
+        method: 'GET',
+        path: '/api/appeals?depth=1&sort=-createdAt',
+        description: '申诉列表（本人或审核员/管理员）',
+        auth: '需登录',
+      },
+      {
+        method: 'POST',
+        path: '/api/appeal/create',
+        description: '发起申诉',
+        auth: '需登录',
+      },
+      {
+        method: 'POST',
+        path: '/api/review/appeals',
+        description: '审核处理申诉并退币',
+        auth: '需审核员或管理员',
+      },
+    ],
+  },
+  {
     slug: 'coin-transactions',
     label: '平台币流水',
     api: [
       {
         method: 'GET',
-        path: '/api/coin-transactions?sort=-createdAt',
-        description: '我的平台币流水',
+        path: '/api/coin-transactions?where[user][equals]={userId}&sort=-createdAt',
+        description: '我的平台币流水（admin 也必须带 where，否则会返回全站流水）',
         auth: '需登录',
       },
     ],

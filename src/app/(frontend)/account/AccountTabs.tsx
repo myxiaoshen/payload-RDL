@@ -4,6 +4,7 @@ import React, { useState } from 'react'
 
 import { cn } from '@/utilities/ui'
 import { AccountActions } from './AccountActions'
+import { AccountAppeals } from './AccountAppeals'
 import { AccountAssets } from './AccountAssets'
 import { AccountBounty } from './AccountBounty'
 import { AccountComments } from './AccountComments'
@@ -18,6 +19,7 @@ type TabKey =
   | 'orders'
   | 'resources'
   | 'bounty'
+  | 'appeals'
   | 'transactions'
   | 'favorites'
   | 'comments'
@@ -28,6 +30,7 @@ const TABS: { key: TabKey; label: string }[] = [
   { key: 'orders', label: '我的订单' },
   { key: 'resources', label: '我的资源' },
   { key: 'bounty', label: '我的悬赏' },
+  { key: 'appeals', label: '我的申诉' },
   { key: 'transactions', label: '平台币流水' },
   { key: 'favorites', label: '我的收藏' },
   { key: 'comments', label: '我的评论' },
@@ -96,7 +99,10 @@ export const AccountTabs: React.FC<Props> = ({
       {active === 'orders' && <AccountOrders />}
       {active === 'resources' && <AccountResources userId={userId} />}
       {active === 'bounty' && <AccountBounty userId={userId} />}
-      {active === 'transactions' && <AccountTransactions totalEarnings={totalEarnings} />}
+      {active === 'appeals' && <AccountAppeals />}
+      {active === 'transactions' && (
+        <AccountTransactions userId={userId} totalEarnings={totalEarnings} />
+      )}
       {active === 'favorites' && <AccountFavorites />}
       {active === 'comments' && <AccountComments />}
       {active === 'settings' && (

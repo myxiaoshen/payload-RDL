@@ -1,13 +1,13 @@
 import type { Metadata } from 'next'
 
 import configPromise from '@payload-config'
-import { ArrowRight, Download, ShieldCheck, Zap } from 'lucide-react'
+import { Download, ShieldCheck, Zap } from 'lucide-react'
 import Link from 'next/link'
 import { getPayload } from 'payload'
 import React from 'react'
 
 import { SoftwareCard } from '@/components/SoftwareCard'
-import { Button } from '@/components/ui/button'
+import { HomepageHero } from '@/HomepageHero/Component'
 
 export const dynamic = 'force-dynamic'
 
@@ -46,27 +46,7 @@ export default async function HomePage() {
 
   return (
     <div>
-      <section className="border-b border-border bg-gradient-to-b from-accent/40 to-background">
-        <div className="container py-24 text-center md:py-32">
-          <h1 className="mx-auto max-w-3xl text-4xl font-bold tracking-tight md:text-6xl">
-            精选软件，一站下载
-          </h1>
-          <p className="mx-auto mt-6 max-w-xl text-lg text-muted-foreground">
-            汇集常用工具与开发软件，注册账户即可获取全部版本的下载地址。
-          </p>
-          <div className="mt-10 flex flex-wrap justify-center gap-3">
-            <Button asChild size="lg">
-              <Link href="/software">
-                浏览全部软件
-                <ArrowRight />
-              </Link>
-            </Button>
-            <Button asChild size="lg" variant="outline">
-              <Link href="/register">免费注册</Link>
-            </Button>
-          </div>
-        </div>
-      </section>
+      <HomepageHero />
 
       <section className="container py-16">
         <div className="grid gap-6 sm:grid-cols-3">

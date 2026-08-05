@@ -38,6 +38,8 @@ import { ReindexButton as ReindexButton_aead06e4cbf6b2620c5c51c9ab283634 } from 
 import { FolderTypeField as FolderTypeField_2b8867833a34864a02ddf429b0728a40 } from '@payloadcms/next/client'
 import { RowLabel as RowLabel_ec255a65fa6fa8d1faeb09cf35284224 } from '@/Header/RowLabel'
 import { RowLabel as RowLabel_1f6ff6ff633e3695d348f4f3c58f1466 } from '@/Footer/RowLabel'
+import { MenuRowLabel as MenuRowLabel_227dfe1ca2c0121ccacd74f5ee0bbaf2 } from '@/HomepageHero/RowLabel'
+import { SlideRowLabel as SlideRowLabel_227dfe1ca2c0121ccacd74f5ee0bbaf2 } from '@/HomepageHero/RowLabel'
 import { AdminRouteInfoField as AdminRouteInfoField_aad4c2163d65b48abed1837b5afeacb6 } from '@/Security/AdminRouteInfo'
 import { default as default_497ff965a89fc4c87f4d374e11f3f378 } from '@/components/AdminAvatar'
 import { default as default_efee3c115af5799d6a3c68f22412cad2 } from '@/components/AdminLoginCaptcha'
@@ -90,6 +92,8 @@ export const importMap = {
   "@payloadcms/next/client#FolderTypeField": FolderTypeField_2b8867833a34864a02ddf429b0728a40,
   "@/Header/RowLabel#RowLabel": RowLabel_ec255a65fa6fa8d1faeb09cf35284224,
   "@/Footer/RowLabel#RowLabel": RowLabel_1f6ff6ff633e3695d348f4f3c58f1466,
+  "@/HomepageHero/RowLabel#MenuRowLabel": MenuRowLabel_227dfe1ca2c0121ccacd74f5ee0bbaf2,
+  "@/HomepageHero/RowLabel#SlideRowLabel": SlideRowLabel_227dfe1ca2c0121ccacd74f5ee0bbaf2,
   "@/Security/AdminRouteInfo#AdminRouteInfoField": AdminRouteInfoField_aad4c2163d65b48abed1837b5afeacb6,
   "@/components/AdminAvatar#default": default_497ff965a89fc4c87f4d374e11f3f378,
   "@/components/AdminLoginCaptcha#default": default_efee3c115af5799d6a3c68f22412cad2,

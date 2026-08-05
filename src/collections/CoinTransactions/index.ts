@@ -48,6 +48,8 @@ export const CoinTransactions: CollectionConfig = {
         { label: '悬赏冻结', value: 'bounty-escrow' },
         { label: '悬赏奖励', value: 'bounty-reward' },
         { label: '悬赏退款', value: 'bounty-refund' },
+        { label: '申诉退款', value: 'appeal-refund' },
+        { label: '申诉追回', value: 'appeal-clawback' },
       ],
       admin: { readOnly: true },
     },
@@ -76,6 +78,13 @@ export const CoinTransactions: CollectionConfig = {
       type: 'relationship',
       relationTo: 'bounties',
       label: '关联悬赏',
+      admin: { readOnly: true },
+    },
+    {
+      name: 'relatedAppeal',
+      type: 'relationship',
+      relationTo: 'appeals',
+      label: '关联申诉',
       admin: { readOnly: true },
     },
     {
