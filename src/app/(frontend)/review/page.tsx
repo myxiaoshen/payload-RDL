@@ -18,6 +18,20 @@ const relName = (value: unknown): string => {
   return String(value ?? '未知')
 }
 
+const relatedToLabel = (value: unknown): string => {
+  if (!value || typeof value !== 'object') return '未知对象'
+  const related = value as {
+    relationTo?: string
+    value?: { title?: string; slug?: string } | number | string | null
+  }
+  const typeLabel =
+    related.relationTo === 'software' ? '软件' : related.relationTo === 'posts' ? '文章' : '内容'
+  if (related.value && typeof related.value === 'object') {
+    return `${typeLabel}：${related.value.title || related.value.slug || '未知'}`
+  }
+  return `${typeLabel} #${String(related.value ?? '未知')}`
+}
+
 export default async function ReviewPage() {
   const user = await getCurrentUser()
 
@@ -34,7 +48,7 @@ export default async function ReviewPage() {
 
   const payload = await getPayload({ config: configPromise })
 
-  const [pendingUsers, pendingResources, pendingBounties] = await Promise.all([
+  const [pendingUsers, pendingResources, pendingBounties, pendingComments] = await Promise.all([
     payload.find({
       collection: 'users',
       depth: 0,
@@ -55,6 +69,14 @@ export default async function ReviewPage() {
       limit: 50,
       overrideAccess: true,
       where: { status: { equals: 'pending' } },
+    }),
+    payload.find({
+      collection: 'comments',
+      depth: 1,
+      limit: 50,
+      overrideAccess: true,
+      where: { status: { equals: 'pending' } },
+      sort: '-createdAt',
     }),
   ])
 
@@ -108,7 +130,7 @@ export default async function ReviewPage() {
         </ul>
       </section>
 
-      <section>
+      <section className="mb-10">
         <h2 className="mb-4 text-lg font-semibold">待审核悬赏（{pendingBounties.totalDocs}）</h2>
         {pendingBounties.docs.length === 0 && (
           <p className="text-sm text-muted-foreground">暂无待审核悬赏</p>
@@ -126,6 +148,29 @@ export default async function ReviewPage() {
                 </p>
               </div>
               <ReviewActionButtons endpoint="/api/review/bounties" id={doc.id} />
+            </li>
+          ))}
+        </ul>
+      </section>
+
+      <section>
+        <h2 className="mb-4 text-lg font-semibold">待审核评论（{pendingComments.totalDocs}）</h2>
+        {pendingComments.docs.length === 0 && (
+          <p className="text-sm text-muted-foreground">暂无待审核评论</p>
+        )}
+        <ul className="flex flex-col gap-3">
+          {pendingComments.docs.map((doc) => (
+            <li
+              className="flex items-start justify-between gap-4 rounded-lg border border-border p-4"
+              key={doc.id}
+            >
+              <div className="min-w-0 flex-1">
+                <p className="whitespace-pre-wrap break-words font-medium">{doc.content}</p>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  作者：{relName(doc.author)} · {relatedToLabel(doc.relatedTo)}
+                </p>
+              </div>
+              <ReviewActionButtons endpoint="/api/review/comments" id={doc.id} />
             </li>
           ))}
         </ul>

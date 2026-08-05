@@ -2237,6 +2237,39 @@ export interface Header {
  */
 export interface Footer {
   id: number;
+  /**
+   * 显示在页脚 Logo 下方的简介文案。
+   */
+  description?: string | null;
+  /**
+   * 前台「快速链接」栏目，可自定义标签与路径。
+   */
+  quickLinks?:
+    | {
+        link: {
+          type?: ('reference' | 'custom') | null;
+          newTab?: boolean | null;
+          reference?:
+            | ({
+                relationTo: 'pages';
+                value: number | Page;
+              } | null)
+            | ({
+                relationTo: 'posts';
+                value: number | Post;
+              } | null);
+          /**
+           * 可填站内路径（如 /software）或完整网址（如 https://example.com）。
+           */
+          url?: string | null;
+          label: string;
+        };
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * 前台「更多」栏目。
+   */
   navItems?:
     | {
         link: {
@@ -2318,6 +2351,21 @@ export interface HeaderSelect<T extends boolean = true> {
  * via the `definition` "footer_select".
  */
 export interface FooterSelect<T extends boolean = true> {
+  description?: T;
+  quickLinks?:
+    | T
+    | {
+        link?:
+          | T
+          | {
+              type?: T;
+              newTab?: T;
+              reference?: T;
+              url?: T;
+              label?: T;
+            };
+        id?: T;
+      };
   navItems?:
     | T
     | {

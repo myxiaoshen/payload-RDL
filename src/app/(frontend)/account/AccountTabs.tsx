@@ -43,7 +43,11 @@ type Props = {
   signedToday: boolean
   membershipHref: string
   membershipPrice: number | null
+  initialTab?: string | null
 }
+
+const isTabKey = (value?: string | null): value is TabKey =>
+  Boolean(value) && TABS.some((tab) => tab.key === value)
 
 /** 个人中心分标签页展示：只加载当前标签的数据，避免一次性拉取全部列表。 */
 export const AccountTabs: React.FC<Props> = ({
@@ -55,8 +59,9 @@ export const AccountTabs: React.FC<Props> = ({
   signedToday,
   membershipHref,
   membershipPrice,
+  initialTab,
 }) => {
-  const [active, setActive] = useState<TabKey>('assets')
+  const [active, setActive] = useState<TabKey>(isTabKey(initialTab) ? initialTab : 'assets')
 
   return (
     <div>

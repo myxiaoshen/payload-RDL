@@ -11,9 +11,12 @@ import { cn } from '@/utilities/ui'
 export type SubmissionItem = {
   id: number | string
   submitterName: string
+  submitterAvatarUrl?: string | null
   note?: string | null
   content?: unknown
   status: string
+  /** 系统补充说明，如 rejected 时的「已选择其他方案」。 */
+  statusDetail?: string | null
   createdAt?: string | null
 }
 
@@ -29,6 +32,11 @@ const STATUS_LABEL: Record<string, string> = {
   submitted: '待处理',
   accepted: '已采纳',
   rejected: '未采纳',
+}
+
+const initialOf = (name: string): string => {
+  const trimmed = name.trim()
+  return trimmed ? trimmed.charAt(0).toUpperCase() : '?'
 }
 
 export const SubmissionList: React.FC<Props> = ({ submissions, isOwner, canAccept }) => {
@@ -101,10 +109,29 @@ export const SubmissionList: React.FC<Props> = ({ submissions, isOwner, canAccep
             )}
           >
             <div className="flex items-center justify-between gap-3">
-              <span className="font-medium">{s.submitterName}</span>
+              <div className="flex min-w-0 items-center gap-3">
+                <div className="size-9 shrink-0 overflow-hidden rounded-full bg-muted">
+                  {s.submitterAvatarUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element -- public avatar URL from media/external
+                    <img src={s.submitterAvatarUrl} alt="" className="size-full object-cover" />
+                  ) : (
+                    <div className="flex size-full items-center justify-center text-xs font-semibold text-muted-foreground">
+                      {initialOf(s.submitterName)}
+                    </div>
+                  )}
+                </div>
+                <div className="min-w-0">
+                  <span className="block truncate font-medium">{s.submitterName}</span>
+                  {s.statusDetail ? (
+                    <span className="mt-0.5 block text-xs text-muted-foreground">
+                      {s.statusDetail}
+                    </span>
+                  ) : null}
+                </div>
+              </div>
               <span
                 className={cn(
-                  'rounded-full px-2 py-0.5 text-xs',
+                  'shrink-0 rounded-full px-2 py-0.5 text-xs',
                   s.status === 'accepted'
                     ? 'bg-primary/10 text-primary'
                     : 'bg-muted text-muted-foreground',

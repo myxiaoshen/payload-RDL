@@ -649,6 +649,14 @@ const seed = async (): Promise<void> => {
   await payload.updateGlobal({
     slug: 'footer',
     data: {
+      description: '资源下载与学习平台，汇聚软件、教程与优质资源。',
+      quickLinks: [
+        { link: { type: 'custom', label: '文章', url: '/posts' } },
+        { link: { type: 'custom', label: '软件下载', url: '/software' } },
+        { link: { type: 'custom', label: '资源交易', url: '/market' } },
+        { link: { type: 'custom', label: '专题', url: '/topics' } },
+        { link: { type: 'custom', label: '搜索', url: '/search' } },
+      ],
       navItems: [
         { link: { type: 'custom', label: '后台管理', url: '/admin' } },
         { link: { type: 'custom', label: '市场', url: '/market' } },

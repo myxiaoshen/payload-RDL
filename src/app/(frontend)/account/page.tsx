@@ -12,12 +12,19 @@ import { AccountTabs } from './AccountTabs'
 
 export const dynamic = 'force-dynamic'
 
+type Args = {
+  searchParams: Promise<{
+    tab?: string
+  }>
+}
+
 const isToday = (value?: string | null) =>
   Boolean(value) &&
   new Date(value!).toISOString().slice(0, 10) === new Date().toISOString().slice(0, 10)
 
-export default async function AccountPage() {
+export default async function AccountPage({ searchParams }: Args) {
   const user = await getCurrentUser()
+  const { tab } = await searchParams
 
   if (!user) redirect('/login?redirect=/account')
 
@@ -64,6 +71,7 @@ export default async function AccountPage() {
         signedToday={isToday(user.lastSigninAt)}
         membershipHref={membership?.slug ? `/market/${membership.slug}` : '/vip'}
         membershipPrice={membership?.price ?? null}
+        initialTab={tab}
       />
     </div>
   )

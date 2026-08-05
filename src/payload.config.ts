@@ -38,6 +38,7 @@ import { resourceDownloadEndpoint } from './endpoints/market/resourceDownload'
 import { captchaChallengeEndpoint, captchaVerifyEndpoint } from './endpoints/captcha'
 import { registerEndpoint } from './endpoints/auth/register'
 import { reviewBountiesEndpoint } from './endpoints/review/bounties'
+import { reviewCommentsEndpoint } from './endpoints/review/comments'
 import { reviewMarketResourcesEndpoint } from './endpoints/review/marketResources'
 import { reviewUsersEndpoint } from './endpoints/review/users'
 import { Footer } from './Footer/config'
@@ -161,6 +162,7 @@ export default buildConfig({
     reviewUsersEndpoint,
     reviewMarketResourcesEndpoint,
     reviewBountiesEndpoint,
+    reviewCommentsEndpoint,
   ],
   globals: [Header, Footer, Security],
   plugins,

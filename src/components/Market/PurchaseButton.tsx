@@ -26,6 +26,7 @@ export const PurchaseButton: React.FC<Props> = ({
 }) => {
   const router = useRouter()
   const [pending, setPending] = useState(false)
+  const [confirming, setConfirming] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [hasAccess, setHasAccess] = useState(owned)
 
@@ -42,12 +43,15 @@ export const PurchaseButton: React.FC<Props> = ({
       const data = await res.json()
       if (!res.ok) {
         if (data?.alreadyOwned) setHasAccess(true)
+        setConfirming(false)
         setError(data?.error ?? '购买失败，请稍后重试')
         return
       }
       setHasAccess(true)
+      setConfirming(false)
       router.refresh()
     } catch {
+      setConfirming(false)
       setError('网络错误，请稍后重试')
     } finally {
       setPending(false)
@@ -77,6 +81,16 @@ export const PurchaseButton: React.FC<Props> = ({
     }
   }
 
+  const openConfirm = () => {
+    setError(null)
+    setConfirming(true)
+  }
+
+  const cancelConfirm = () => {
+    if (pending) return
+    setConfirming(false)
+  }
+
   if (!isLoggedIn) {
     return (
       <div className="flex flex-col gap-3">
@@ -89,6 +103,32 @@ export const PurchaseButton: React.FC<Props> = ({
     )
   }
 
+  const confirmPanel = (
+    <div className="rounded-xl border border-border bg-muted/40 p-4">
+      <p className="text-sm font-medium">{isMembership ? '确认升级 VIP' : '确认购买'}</p>
+      <p className="mt-1 text-sm text-muted-foreground">
+        将扣除 <span className="font-medium text-foreground">{price} Coin</span>
+        {isMembership ? ' 并升级为 VIP 会员' : ' 获取该资源'}
+        ，确认后不可撤销。
+      </p>
+      <div className="mt-3 flex items-center gap-2">
+        <Button onClick={handlePurchase} disabled={pending} size="sm">
+          {pending ? (
+            <Loader2 className="animate-spin" />
+          ) : isMembership ? (
+            <Crown />
+          ) : (
+            <ShoppingCart />
+          )}
+          {pending ? '处理中…' : `确认支付 ${price} Coin`}
+        </Button>
+        <Button onClick={cancelConfirm} disabled={pending} size="sm" variant="ghost">
+          再想想
+        </Button>
+      </div>
+    </div>
+  )
+
   if (isMembership) {
     return (
       <div className="flex flex-col gap-3">
@@ -97,9 +137,11 @@ export const PurchaseButton: React.FC<Props> = ({
             <Crown />
             你已是 VIP 会员
           </Button>
+        ) : confirming ? (
+          confirmPanel
         ) : (
-          <Button onClick={handlePurchase} disabled={pending}>
-            {pending ? <Loader2 className="animate-spin" /> : <Crown />}
+          <Button onClick={openConfirm} disabled={pending}>
+            <Crown />
             花费 {price} Coin 升级 VIP
           </Button>
         )}
@@ -115,9 +157,11 @@ export const PurchaseButton: React.FC<Props> = ({
           {pending ? <Loader2 className="animate-spin" /> : <Download />}
           下载资源
         </Button>
+      ) : confirming ? (
+        confirmPanel
       ) : (
-        <Button onClick={handlePurchase} disabled={pending}>
-          {pending ? <Loader2 className="animate-spin" /> : <ShoppingCart />}
+        <Button onClick={openConfirm} disabled={pending}>
+          <ShoppingCart />
           花费 {price} Coin 购买
         </Button>
       )}

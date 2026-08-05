@@ -159,6 +159,12 @@ const ROUTE_META: Record<string, RouteMeta> = {
         description: '审核待发布的悬赏任务（approve/reject）',
         auth: '需审核员或管理员',
       },
+      {
+        method: 'POST',
+        path: '/api/review/comments',
+        description: '审核待通过的评论（approve/reject）',
+        auth: '需审核员或管理员',
+      },
     ],
   },
   '/vip': { label: 'VIP 会员介绍', group: '用户中心' },

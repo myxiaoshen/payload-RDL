@@ -1,4 +1,5 @@
 import type { Endpoint, PayloadRequest, RequiredDataFromCollectionSlug } from 'payload'
+import { revalidatePath } from 'next/cache'
 
 import { markdownToLexical } from '@/utilities/markdownToLexical'
 import { notifyUser } from '@/utilities/notify'
@@ -118,6 +119,13 @@ export const bountySubmitEndpoint: Endpoint = {
         message: `「${bounty.title}」收到一个新方案，快去查看吧`,
         link: `/bounty/${bounty.slug}`,
       })
+    }
+
+    try {
+      revalidatePath('/bounty')
+      if (bounty.slug) revalidatePath(`/bounty/${bounty.slug}`)
+    } catch {
+      // revalidate 失败不影响提交结果
     }
 
     return json({ submissionId: submission.id }, 200)

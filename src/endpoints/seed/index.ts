@@ -226,15 +226,36 @@ export const seed = async ({
   }
 
   const footer = await payload.findGlobal({ slug: 'footer', depth: 0, req })
-  if (!footer.navItems || footer.navItems.length === 0) {
+  const footerNeedsSeed =
+    !footer.description ||
+    !footer.quickLinks ||
+    footer.quickLinks.length === 0 ||
+    !footer.navItems ||
+    footer.navItems.length === 0
+
+  if (footerNeedsSeed) {
     await payload.updateGlobal({
       slug: 'footer',
       req,
       data: {
-        navItems: [
-          { link: { type: 'custom', label: '后台管理', url: '/admin' } },
-          { link: { type: 'custom', label: '联系我们', url: '/contact' } },
-        ],
+        description: footer.description || '资源下载与学习平台，汇聚软件、教程与优质资源。',
+        quickLinks:
+          footer.quickLinks && footer.quickLinks.length > 0
+            ? footer.quickLinks
+            : [
+                { link: { type: 'custom', label: '文章', url: '/posts' } },
+                { link: { type: 'custom', label: '软件下载', url: '/software' } },
+                { link: { type: 'custom', label: '资源交易', url: '/market' } },
+                { link: { type: 'custom', label: '专题', url: '/topics' } },
+                { link: { type: 'custom', label: '搜索', url: '/search' } },
+              ],
+        navItems:
+          footer.navItems && footer.navItems.length > 0
+            ? footer.navItems
+            : [
+                { link: { type: 'custom', label: '后台管理', url: '/admin' } },
+                { link: { type: 'custom', label: '联系我们', url: '/contact' } },
+              ],
       },
     })
   }

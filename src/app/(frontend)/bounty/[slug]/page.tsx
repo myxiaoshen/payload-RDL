@@ -13,26 +13,16 @@ import { SubmissionList } from '@/components/Bounty/SubmissionList'
 import { SubmitSolutionForm } from '@/components/Bounty/SubmitSolutionForm'
 import RichText from '@/components/RichText'
 import { getCurrentUser } from '@/utilities/getCurrentUser'
+import {
+  formatPublicDisplayName,
+  relationId,
+  resolvePublicUserProfiles,
+} from '@/utilities/publicUserProfile'
 
 export const dynamic = 'force-dynamic'
 
 type Args = {
   params: Promise<{ slug?: string }>
-}
-
-const relId = (value: unknown): number | string | null => {
-  if (value == null) return null
-  return typeof value === 'object'
-    ? (value as { id: number | string }).id
-    : (value as number | string)
-}
-
-const personName = (value: unknown): string => {
-  if (value && typeof value === 'object') {
-    const u = value as { name?: string | null; email?: string | null }
-    return u.name || u.email || '匿名'
-  }
-  return '匿名'
 }
 
 const STATUS_LABEL: Record<string, string> = {
@@ -41,6 +31,11 @@ const STATUS_LABEL: Record<string, string> = {
   closed: '已关闭',
   rejected: '已驳回',
   pending: '待审核',
+}
+
+const submissionStatusDetail = (status: string | null | undefined): string | null => {
+  if (status === 'rejected') return '已选择其他方案'
+  return null
 }
 
 export default async function BountyDetail({ params: paramsPromise }: Args) {
@@ -54,49 +49,65 @@ export default async function BountyDetail({ params: paramsPromise }: Args) {
 
   if (!bounty) return notFound()
 
-  const authorId = relId(bounty.author)
-  const authorName = personName(bounty.author)
-  const isOwner = Boolean(user) && (user!.role === 'admin' || String(authorId) === String(user!.id))
+  const authorId = relationId(bounty.author)
+  // 侧栏/提交身份只看「是否本人发起」；admin 不能冒充发起人，否则看不到提交表单。
+  const isAuthor = Boolean(user) && authorId != null && String(authorId) === String(user!.id)
+  const isAdmin = user?.role === 'admin'
+  // 采纳/下载/查看交付物：发起人或管理员。
+  const canManage = isAuthor || Boolean(isAdmin)
   const isOpen = bounty.status === 'open'
+  const canAccept = canManage && isOpen && !bounty.escrowReleased
+  // 非发起人均可提交（含管理员用普通账号视角参与）。
+  const canSubmit = isOpen && !isAuthor
 
   const payload = await getPayload({ config: configPromise })
 
-  let submissions: SubmissionItem[] = []
+  // 公开悬赏对所有人（含访客）加载参与列表；交付物仅发起人/管理员/本人可见。
+  const { docs: submissionDocs } = await payload.find({
+    collection: 'bounty-submissions',
+    where: { bounty: { equals: bounty.id } },
+    depth: 0,
+    limit: 100,
+    overrideAccess: true,
+    sort: '-createdAt',
+  })
+
+  const profiles = await resolvePublicUserProfiles(payload, [
+    bounty.author,
+    ...submissionDocs.map((d) => d.submitter),
+  ])
+
+  const authorProfile = authorId != null ? profiles.get(String(authorId)) : undefined
+  const authorName =
+    authorProfile?.displayName ?? (authorId != null ? formatPublicDisplayName(authorId) : '用户')
+
   let alreadySubmitted = false
+  const submissions: SubmissionItem[] = submissionDocs.map((d) => {
+    const submitterId = relationId(d.submitter)
+    const isSelf = Boolean(user) && submitterId != null && String(submitterId) === String(user!.id)
+    if (isSelf) alreadySubmitted = true
 
-  if (isOwner) {
-    // 已在服务端校验发起人身份，用 overrideAccess 读取全部提交。
-    const { docs } = await payload.find({
-      collection: 'bounty-submissions',
-      where: { bounty: { equals: bounty.id } },
-      depth: 1,
-      limit: 100,
-      overrideAccess: true,
-      sort: '-createdAt',
-    })
-    submissions = docs.map((d) => ({
+    const profile = submitterId != null ? profiles.get(String(submitterId)) : undefined
+    const submitterName =
+      profile?.displayName ?? (submitterId != null ? formatPublicDisplayName(submitterId) : '用户')
+
+    const item: SubmissionItem = {
       id: d.id,
-      submitterName: personName(d.submitter),
-      note: d.note,
-      content: d.content,
+      submitterName,
+      submitterAvatarUrl: profile?.avatarUrl ?? null,
       status: d.status ?? 'submitted',
+      statusDetail: submissionStatusDetail(d.status),
       createdAt: d.createdAt,
-    }))
-  } else if (user) {
-    const { docs } = await payload.find({
-      collection: 'bounty-submissions',
-      where: {
-        and: [{ bounty: { equals: bounty.id } }, { submitter: { equals: user.id } }],
-      },
-      depth: 0,
-      limit: 1,
-      overrideAccess: false,
-      user,
-    })
-    alreadySubmitted = docs.length > 0
-  }
+    }
 
-  const canSubmit = isOpen && !isOwner
+    // content/note 仅发起人/管理员评审或提交者本人可见；永不传 downloadFile。
+    if (canManage || isSelf) {
+      item.note = d.note
+      item.content = d.content
+    }
+
+    return item
+  })
 
   return (
     <article className="container py-24">
@@ -132,38 +143,46 @@ export default async function BountyDetail({ params: paramsPromise }: Args) {
             )}
           </section>
 
-          {isOwner && (
-            <section>
-              <h2 className="mb-4 text-xl font-semibold">收到的方案</h2>
-              <SubmissionList
-                submissions={submissions}
-                isOwner={isOwner}
-                canAccept={isOpen && !bounty.escrowReleased}
-              />
-            </section>
-          )}
+          <section>
+            <h2 className="mb-4 text-xl font-semibold">{isAuthor ? '收到的方案' : '参与者'}</h2>
+            <SubmissionList submissions={submissions} isOwner={canManage} canAccept={canAccept} />
+          </section>
         </div>
 
         <aside className="lg:sticky lg:top-24 lg:self-start">
           <div className="rounded-xl border border-border bg-card p-6">
             <p className="text-sm text-muted-foreground">悬赏金额</p>
             <p className="mb-4 mt-1 text-3xl font-bold text-primary">{bounty.reward} Coin</p>
-            {isOwner ? (
+            {isAuthor ? (
               <div className="flex flex-col gap-3">
-                <p className="text-sm text-muted-foreground">
-                  这是你发布的悬赏，可在下方查看并采纳方案。
-                </p>
-                {isOpen && !bounty.escrowReleased && (
-                  <CloseBountyButton bountyId={bounty.id} reward={bounty.reward} />
+                {isOpen && !bounty.escrowReleased ? (
+                  <>
+                    <p className="text-sm text-muted-foreground">
+                      这是你发布的悬赏，可在下方查看并采纳方案。
+                    </p>
+                    <CloseBountyButton bountyId={bounty.id} reward={bounty.reward} />
+                  </>
+                ) : bounty.status === 'fulfilled' ? (
+                  <p className="text-sm text-muted-foreground">该悬赏已完成，奖励已发放。</p>
+                ) : (
+                  <p className="text-sm text-muted-foreground">
+                    该悬赏已{STATUS_LABEL[bounty.status ?? ''] ?? '结束'}。
+                  </p>
                 )}
               </div>
             ) : (
-              <SubmitSolutionForm
-                bountyId={bounty.id}
-                isLoggedIn={Boolean(user)}
-                canSubmit={canSubmit}
-                alreadySubmitted={alreadySubmitted}
-              />
+              <div className="flex flex-col gap-3">
+                <SubmitSolutionForm
+                  bountyId={bounty.id}
+                  isLoggedIn={Boolean(user)}
+                  canSubmit={canSubmit}
+                  alreadySubmitted={alreadySubmitted}
+                  bountyStatus={bounty.status}
+                />
+                {isAdmin && isOpen && !bounty.escrowReleased && (
+                  <CloseBountyButton bountyId={bounty.id} reward={bounty.reward} />
+                )}
+              </div>
             )}
           </div>
         </aside>
