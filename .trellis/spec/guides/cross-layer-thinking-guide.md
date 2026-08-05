@@ -71,7 +71,20 @@ For each boundary:
 
 **Good**: Each layer only knows its neighbors
 
-### Mistake 4: Every Consumer Parses The Same Payload
+### Mistake 4: Equating elevated role with resource ownership
+
+**Bad**: Frontend treats `admin` as bounty author for all sidebar branches (`isOwner = author || admin`). Admin non-authors lose submit UX while still needing manage tools.
+
+**Good**: Separate **identity** (`isAuthor`) from **capability** (`canManage` / `canAccept` / `canSubmit`). Backend may still allow admin on accept/close endpoints; UI must not pretend admin published the bounty.
+
+**Checklist when a page mixes “owner tools” and “participant tools”**:
+
+- [ ] Who is the resource author (id equality only)?
+- [ ] Who can manage (author and/or role)?
+- [ ] Who can participate (usually everyone except the author)?
+- [ ] Do public DTOs strip download URLs / email regardless of role?
+
+### Mistake 5: Every Consumer Parses The Same Payload
 
 **Bad**: A command reads JSONL events and casts fields inline:
 

@@ -36,8 +36,11 @@ These guides help you **ask the right questions before coding**.
 - [ ] You're not sure where to put some logic
 - [ ] You are adding an event kind, JSONL record, RPC payload, or config field
 - [ ] UI / command code starts casting raw payload fields directly
+- [ ] Public page needs author/participant display but `users.read` is authenticated-only
+- [ ] One UI flag mixes “is author” with “is admin/manager” for owner vs submit branches
+- [ ] Mutation endpoints change public list/detail and you need `revalidatePath` + `router.refresh`
 
-→ Read [Cross-Layer Thinking Guide](./cross-layer-thinking-guide.md)
+→ Read [Cross-Layer Thinking Guide](./cross-layer-thinking-guide.md) and frontend [Quality Guidelines](../frontend/quality-guidelines.md)
 
 ### When to Think About Code Reuse
 
