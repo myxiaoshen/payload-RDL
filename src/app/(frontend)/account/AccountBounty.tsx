@@ -1,8 +1,9 @@
 'use client'
 
 import Link from 'next/link'
-import React from 'react'
+import React, { useState } from 'react'
 
+import { AppealForm } from '@/components/Appeals/AppealForm'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/utilities/ui'
 import { ListShell } from './ListShell'
@@ -47,6 +48,9 @@ const badge = (active: boolean) =>
     active ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground',
   )
 
+const canAppealBounty = (status?: string | null) =>
+  status === 'open' || status === 'fulfilled' || status === 'closed'
+
 type Props = { userId: string }
 
 export const AccountBounty: React.FC<Props> = ({ userId }) => {
@@ -56,6 +60,7 @@ export const AccountBounty: React.FC<Props> = ({ userId }) => {
   const submissions = usePaginatedList<SubmissionDoc>({
     query: '/api/bounty-submissions?depth=1&sort=-createdAt',
   })
+  const [appealingId, setAppealingId] = useState<string | null>(null)
 
   return (
     <div className="flex flex-col gap-10">
@@ -76,30 +81,50 @@ export const AccountBounty: React.FC<Props> = ({ userId }) => {
           onPageChange={published.setPage}
         >
           {published.docs.map((b) => {
-            const inner = (
-              <>
-                <span className="min-w-0 truncate">
-                  <span className={badge(b.status === 'open')}>
-                    {BOUNTY_STATUS[b.status ?? ''] ?? b.status}
-                  </span>
-                  {b.title || '未命名'}
-                </span>
-                <span className="shrink-0 text-sm text-muted-foreground">
-                  {b.reward} Coin · {b.submissionCount ?? 0} 个方案
-                </span>
-              </>
-            )
+            const isOpen = appealingId === String(b.id)
+            const showAppeal = canAppealBounty(b.status)
+
             return (
-              <li key={String(b.id)} className="px-4 py-3">
-                {b.slug ? (
-                  <Link
-                    href={`/bounty/${b.slug}`}
-                    className="flex items-center justify-between gap-4 hover:text-primary"
-                  >
-                    {inner}
-                  </Link>
-                ) : (
-                  <div className="flex items-center justify-between gap-4">{inner}</div>
+              <li key={String(b.id)} className="flex flex-col gap-3 px-4 py-3">
+                <div className="flex items-center justify-between gap-4">
+                  {b.slug ? (
+                    <Link href={`/bounty/${b.slug}`} className="min-w-0 truncate hover:text-primary">
+                      <span className={badge(b.status === 'open')}>
+                        {BOUNTY_STATUS[b.status ?? ''] ?? b.status}
+                      </span>
+                      {b.title || '未命名'}
+                    </Link>
+                  ) : (
+                    <span className="min-w-0 truncate">
+                      <span className={badge(b.status === 'open')}>
+                        {BOUNTY_STATUS[b.status ?? ''] ?? b.status}
+                      </span>
+                      {b.title || '未命名'}
+                    </span>
+                  )}
+                  <div className="flex shrink-0 items-center gap-2">
+                    <span className="text-sm text-muted-foreground">
+                      {b.reward} Coin · {b.submissionCount ?? 0} 个方案
+                    </span>
+                    {showAppeal && (
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        onClick={() => setAppealingId(isOpen ? null : String(b.id))}
+                      >
+                        {isOpen ? '收起' : '申诉'}
+                      </Button>
+                    )}
+                  </div>
+                </div>
+                {isOpen && (
+                  <AppealForm
+                    type="bounty"
+                    targetId={b.id}
+                    targetLabel={`悬赏：${b.title || '未命名'}（${b.reward} Coin）`}
+                    onClose={() => setAppealingId(null)}
+                  />
                 )}
               </li>
             )

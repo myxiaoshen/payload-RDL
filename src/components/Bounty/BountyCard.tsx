@@ -9,11 +9,9 @@ import { cn } from '@/utilities/ui'
 export type BountyCardData = Pick<
   Bounty,
   'slug' | 'title' | 'summary' | 'coverImage' | 'reward' | 'submissionCount' | 'author' | 'status'
->
-
-const authorName = (author: Bounty['author']): string => {
-  if (author && typeof author === 'object') return author.name || author.email || '匿名'
-  return '匿名'
+> & {
+  /** 服务端解析的公开显示名；优先于 author 关系 populate。 */
+  authorDisplayName?: string | null
 }
 
 const STATUS_LABEL: Record<string, string> = {
@@ -26,7 +24,9 @@ export const BountyCard: React.FC<{ className?: string; doc: BountyCardData }> =
   className,
   doc,
 }) => {
-  const { slug, title, summary, coverImage, reward, submissionCount, status } = doc
+  const { slug, title, summary, coverImage, reward, submissionCount, status, authorDisplayName } =
+    doc
+  const displayName = authorDisplayName?.trim() || '用户'
 
   return (
     <Link
@@ -51,7 +51,7 @@ export const BountyCard: React.FC<{ className?: string; doc: BountyCardData }> =
           <h3 className="truncate font-semibold leading-tight transition-colors group-hover:text-primary">
             {title}
           </h3>
-          <p className="mt-1 text-xs text-muted-foreground">发起人：{authorName(doc.author)}</p>
+          <p className="mt-1 text-xs text-muted-foreground">发起人：{displayName}</p>
         </div>
 
         {status && STATUS_LABEL[status] && (

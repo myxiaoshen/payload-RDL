@@ -1,4 +1,5 @@
 import type { Endpoint, PayloadRequest } from 'payload'
+import { revalidatePath } from 'next/cache'
 
 import { applyCoinDelta } from '@/utilities/coin'
 import { notifyUser } from '@/utilities/notify'
@@ -124,6 +125,13 @@ export const bountyCloseEndpoint: Endpoint = {
         message: `你参与的悬赏「${bounty.title}」已关闭`,
         link: `/bounty/${bounty.slug}`,
       })
+    }
+
+    try {
+      revalidatePath('/bounty')
+      if (bounty.slug) revalidatePath(`/bounty/${bounty.slug}`)
+    } catch {
+      // revalidate 失败不影响关闭结果
     }
 
     return json(result, 200)

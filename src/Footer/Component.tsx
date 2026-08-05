@@ -7,17 +7,24 @@ import { CMSLink } from '@/components/Link'
 import { Logo } from '@/components/Logo/Logo'
 import { BackToTop } from '@/components/BackToTop'
 
-const quickLinks = [
-  { href: '/posts', label: '文章' },
-  { href: '/software', label: '软件下载' },
-  { href: '/market', label: '资源交易' },
-  { href: '/topics', label: '专题' },
-  { href: '/search', label: '搜索' },
+const DEFAULT_DESCRIPTION = '资源下载与学习平台，汇聚软件、教程与优质资源。'
+
+const DEFAULT_QUICK_LINKS = [
+  { link: { type: 'custom' as const, label: '文章', url: '/posts' } },
+  { link: { type: 'custom' as const, label: '软件下载', url: '/software' } },
+  { link: { type: 'custom' as const, label: '资源交易', url: '/market' } },
+  { link: { type: 'custom' as const, label: '专题', url: '/topics' } },
+  { link: { type: 'custom' as const, label: '搜索', url: '/search' } },
 ]
 
 export async function Footer() {
   const footerData = await getCachedGlobal('footer', 1)()
 
+  const description = footerData?.description?.trim() || DEFAULT_DESCRIPTION
+  const quickLinks =
+    footerData?.quickLinks && footerData.quickLinks.length > 0
+      ? footerData.quickLinks
+      : DEFAULT_QUICK_LINKS
   const navItems = footerData?.navItems || []
   const year = new Date().getFullYear()
 
@@ -29,25 +36,24 @@ export async function Footer() {
             <Link className="flex items-center" href="/">
               <Logo />
             </Link>
-            <p className="text-sm text-white/60">资源下载与学习平台，汇聚软件、教程与优质资源。</p>
+            <p className="text-sm text-white/60">{description}</p>
           </div>
 
           <div className="flex flex-col gap-10 sm:flex-row sm:gap-16">
-            <div className="space-y-3">
-              <h3 className="text-sm font-semibold text-white/90">快速链接</h3>
-              <ul className="space-y-2">
-                {quickLinks.map((item) => (
-                  <li key={item.href}>
-                    <Link
-                      href={item.href}
+            {quickLinks.length > 0 && (
+              <div className="space-y-3">
+                <h3 className="text-sm font-semibold text-white/90">快速链接</h3>
+                <nav className="flex flex-col gap-2">
+                  {quickLinks.map(({ link }, i) => (
+                    <CMSLink
                       className="text-sm text-white/60 transition-colors hover:text-white"
-                    >
-                      {item.label}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </div>
+                      key={link?.url || link?.label || i}
+                      {...link}
+                    />
+                  ))}
+                </nav>
+              </div>
+            )}
 
             {navItems.length > 0 && (
               <div className="space-y-3">

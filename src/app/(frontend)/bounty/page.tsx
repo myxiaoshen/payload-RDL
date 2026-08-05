@@ -11,6 +11,7 @@ import { BountyFilters } from '@/components/Bounty/BountyFilters'
 import { QueryPagination } from '@/components/QueryPagination'
 import { ResourceSearch } from '@/components/ResourceSearch'
 import { Button } from '@/components/ui/button'
+import { resolvePublicUserProfiles } from '@/utilities/publicUserProfile'
 
 export const dynamic = 'force-dynamic'
 
@@ -74,6 +75,11 @@ export default async function BountyPage({ searchParams }: Args) {
     }),
   ])
 
+  const authorProfiles = await resolvePublicUserProfiles(
+    payload,
+    bounties.docs.map((doc) => doc.author),
+  )
+
   return (
     <div className="container py-24">
       <header className="mb-10 flex flex-wrap items-end justify-between gap-4">
@@ -101,9 +107,22 @@ export default async function BountyPage({ searchParams }: Args) {
         </p>
       ) : (
         <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-          {bounties.docs.map((doc) => (
-            <BountyCard key={doc.id} doc={doc} />
-          ))}
+          {bounties.docs.map((doc) => {
+            const authorId =
+              doc.author && typeof doc.author === 'object'
+                ? doc.author.id
+                : (doc.author as number | string | null | undefined)
+            const profile = authorId != null ? authorProfiles.get(String(authorId)) : undefined
+            return (
+              <BountyCard
+                key={doc.id}
+                doc={{
+                  ...doc,
+                  authorDisplayName: profile?.displayName,
+                }}
+              />
+            )
+          })}
         </div>
       )}
 

@@ -87,6 +87,7 @@ export interface Config {
     bounties: Bounty;
     'bounty-categories': BountyCategory;
     'bounty-submissions': BountySubmission;
+    appeals: Appeal;
     search: Search;
     'payload-kv': PayloadKv;
     'payload-jobs': PayloadJob;
@@ -121,6 +122,7 @@ export interface Config {
     bounties: BountiesSelect<false> | BountiesSelect<true>;
     'bounty-categories': BountyCategoriesSelect<false> | BountyCategoriesSelect<true>;
     'bounty-submissions': BountySubmissionsSelect<false> | BountySubmissionsSelect<true>;
+    appeals: AppealsSelect<false> | AppealsSelect<true>;
     search: SearchSelect<false> | SearchSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-jobs': PayloadJobsSelect<false> | PayloadJobsSelect<true>;
@@ -136,11 +138,13 @@ export interface Config {
   globals: {
     header: Header;
     footer: Footer;
+    'homepage-hero': HomepageHero;
     security: Security;
   };
   globalsSelect: {
     header: HeaderSelect<false> | HeaderSelect<true>;
     footer: FooterSelect<false> | FooterSelect<true>;
+    'homepage-hero': HomepageHeroSelect<false> | HomepageHeroSelect<true>;
     security: SecuritySelect<false> | SecuritySelect<true>;
   };
   locale: null;
@@ -1094,7 +1098,9 @@ export interface CoinTransaction {
     | 'membership'
     | 'bounty-escrow'
     | 'bounty-reward'
-    | 'bounty-refund';
+    | 'bounty-refund'
+    | 'appeal-refund'
+    | 'appeal-clawback';
   /**
    * 正数为收入，负数为支出
    */
@@ -1102,6 +1108,7 @@ export interface CoinTransaction {
   balanceAfter?: number | null;
   relatedOrder?: (number | null) | Order;
   relatedBounty?: (number | null) | Bounty;
+  relatedAppeal?: (number | null) | Appeal;
   note?: string | null;
   updatedAt: string;
   createdAt: string;
@@ -1201,6 +1208,43 @@ export interface BountySubmission {
   };
   note?: string | null;
   status?: ('submitted' | 'accepted' | 'rejected') | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "appeals".
+ */
+export interface Appeal {
+  id: number;
+  type: 'order' | 'bounty';
+  order?: (number | null) | Order;
+  bounty?: (number | null) | Bounty;
+  applicant: number | User;
+  content: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  };
+  status?: ('pending' | 'approved' | 'rejected') | null;
+  refundAmount?: number | null;
+  reviewNote?: string | null;
+  reviewedBy?: (number | null) | User;
+  reviewedAt?: string | null;
+  /**
+   * 批准退币后置 true，防止重复结算
+   */
+  settled?: boolean | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -1434,6 +1478,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'bounty-submissions';
         value: number | BountySubmission;
+      } | null)
+    | ({
+        relationTo: 'appeals';
+        value: number | Appeal;
       } | null)
     | ({
         relationTo: 'search';
@@ -2032,6 +2080,7 @@ export interface CoinTransactionsSelect<T extends boolean = true> {
   balanceAfter?: T;
   relatedOrder?: T;
   relatedBounty?: T;
+  relatedAppeal?: T;
   note?: T;
   updatedAt?: T;
   createdAt?: T;
@@ -2087,6 +2136,25 @@ export interface BountySubmissionsSelect<T extends boolean = true> {
       };
   note?: T;
   status?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "appeals_select".
+ */
+export interface AppealsSelect<T extends boolean = true> {
+  type?: T;
+  order?: T;
+  bounty?: T;
+  applicant?: T;
+  content?: T;
+  status?: T;
+  refundAmount?: T;
+  reviewNote?: T;
+  reviewedBy?: T;
+  reviewedAt?: T;
+  settled?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -2237,6 +2305,39 @@ export interface Header {
  */
 export interface Footer {
   id: number;
+  /**
+   * 显示在页脚 Logo 下方的简介文案。
+   */
+  description?: string | null;
+  /**
+   * 前台「快速链接」栏目，可自定义标签与路径。
+   */
+  quickLinks?:
+    | {
+        link: {
+          type?: ('reference' | 'custom') | null;
+          newTab?: boolean | null;
+          reference?:
+            | ({
+                relationTo: 'pages';
+                value: number | Page;
+              } | null)
+            | ({
+                relationTo: 'posts';
+                value: number | Post;
+              } | null);
+          /**
+           * 可填站内路径（如 /software）或完整网址（如 https://example.com）。
+           */
+          url?: string | null;
+          label: string;
+        };
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * 前台「更多」栏目。
+   */
   navItems?:
     | {
         link: {
@@ -2260,6 +2361,106 @@ export interface Footer {
         id?: string | null;
       }[]
     | null;
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "homepage-hero".
+ */
+export interface HomepageHero {
+  id: number;
+  /**
+   * 自定义菜单名称与跳转路径，字段语义与页眉/页脚导航一致。
+   */
+  menuItems?:
+    | {
+        link: {
+          type?: ('reference' | 'custom') | null;
+          newTab?: boolean | null;
+          reference?:
+            | ({
+                relationTo: 'pages';
+                value: number | Page;
+              } | null)
+            | ({
+                relationTo: 'posts';
+                value: number | Post;
+              } | null);
+          /**
+           * 可填站内路径（如 /software）或完整网址（如 https://example.com）。
+           */
+          url?: string | null;
+          label: string;
+        };
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * 每条为图片型或视频型二选一；图片可配可选链接，视频支持外链或媒体库。
+   */
+  slides?:
+    | {
+        type: 'image' | 'video';
+        /**
+         * 显示在轮播上的主文案。
+         */
+        title?: string | null;
+        subtitle?: string | null;
+        /**
+         * 图片型必填。从媒体库选择或上传。
+         */
+        image?: (number | null) | Media;
+        /**
+         * 开启后可为该图片配置站内或自定义跳转。
+         */
+        enableLink?: boolean | null;
+        /**
+         * 配置后前台会在轮播上展示跳转按钮。
+         */
+        link?: {
+          type?: ('reference' | 'custom') | null;
+          newTab?: boolean | null;
+          reference?:
+            | ({
+                relationTo: 'pages';
+                value: number | Page;
+              } | null)
+            | ({
+                relationTo: 'posts';
+                value: number | Post;
+              } | null);
+          /**
+           * 可填站内路径（如 /software）或完整网址（如 https://example.com）。
+           */
+          url?: string | null;
+          label: string;
+        };
+        videoSource?: ('url' | 'upload') | null;
+        /**
+         * 支持 mp4/webm 等直链，也支持 YouTube、Bilibili、Vimeo 的视频页地址（会自动转换为播放器）。
+         */
+        videoUrl?: string | null;
+        /**
+         * 从媒体库选择已上传的视频文件（mp4/webm 等）。
+         */
+        videoMedia?: (number | null) | Media;
+        /**
+         * 可选。仅对直链 / 上传的视频生效，第三方播放器使用其自带封面。
+         */
+        poster?: (number | null) | Media;
+        caption?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * 开启后多张轮播约按间隔自动切换；悬停或当前为视频时会暂停。
+   */
+  autoplay?: boolean | null;
+  /**
+   * 建议 3000–8000。默认 5000。
+   */
+  autoplayIntervalMs?: number | null;
   updatedAt?: string | null;
   createdAt?: string | null;
 }
@@ -2318,6 +2519,21 @@ export interface HeaderSelect<T extends boolean = true> {
  * via the `definition` "footer_select".
  */
 export interface FooterSelect<T extends boolean = true> {
+  description?: T;
+  quickLinks?:
+    | T
+    | {
+        link?:
+          | T
+          | {
+              type?: T;
+              newTab?: T;
+              reference?: T;
+              url?: T;
+              label?: T;
+            };
+        id?: T;
+      };
   navItems?:
     | T
     | {
@@ -2332,6 +2548,55 @@ export interface FooterSelect<T extends boolean = true> {
             };
         id?: T;
       };
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "homepage-hero_select".
+ */
+export interface HomepageHeroSelect<T extends boolean = true> {
+  menuItems?:
+    | T
+    | {
+        link?:
+          | T
+          | {
+              type?: T;
+              newTab?: T;
+              reference?: T;
+              url?: T;
+              label?: T;
+            };
+        id?: T;
+      };
+  slides?:
+    | T
+    | {
+        type?: T;
+        title?: T;
+        subtitle?: T;
+        image?: T;
+        enableLink?: T;
+        link?:
+          | T
+          | {
+              type?: T;
+              newTab?: T;
+              reference?: T;
+              url?: T;
+              label?: T;
+            };
+        videoSource?: T;
+        videoUrl?: T;
+        videoMedia?: T;
+        poster?: T;
+        caption?: T;
+        id?: T;
+      };
+  autoplay?: T;
+  autoplayIntervalMs?: T;
   updatedAt?: T;
   createdAt?: T;
   globalType?: T;

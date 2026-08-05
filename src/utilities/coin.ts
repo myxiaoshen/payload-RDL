@@ -9,6 +9,8 @@ export type CoinTxType =
   | 'bounty-escrow'
   | 'bounty-reward'
   | 'bounty-refund'
+  | 'appeal-refund'
+  | 'appeal-clawback'
 
 type CoinChangeInput = {
   userId: number | string
@@ -17,6 +19,7 @@ type CoinChangeInput = {
   note?: string
   relatedOrder?: number | string
   relatedBounty?: number | string
+  relatedAppeal?: number | string
 }
 
 /**
@@ -25,7 +28,7 @@ type CoinChangeInput = {
  */
 export const applyCoinDelta = async (
   req: PayloadRequest,
-  { userId, amount, type, note, relatedOrder, relatedBounty }: CoinChangeInput,
+  { userId, amount, type, note, relatedOrder, relatedBounty, relatedAppeal }: CoinChangeInput,
 ): Promise<number> => {
   const { payload } = req
 
@@ -65,6 +68,7 @@ export const applyCoinDelta = async (
       note,
       relatedOrder: relatedOrder as number | undefined,
       relatedBounty: relatedBounty as number | undefined,
+      relatedAppeal: relatedAppeal as number | undefined,
     },
     depth: 0,
     overrideAccess: true,

@@ -21,15 +21,22 @@ const TYPE_LABEL: Record<string, string> = {
   'sale-income': '销售收入',
   membership: '开通会员',
   'bounty-escrow': '悬赏冻结',
-  'bounty-reward': '悬赏奖励',
+  'bounty-reward': '悬赏采纳奖励',
   'bounty-refund': '悬赏退款',
+  'appeal-refund': '申诉退款',
+  'appeal-clawback': '申诉追回',
 }
 
-type Props = { totalEarnings: number }
+type Props = { userId: string; totalEarnings: number }
 
-export const AccountTransactions: React.FC<Props> = ({ totalEarnings }) => {
+/**
+ * 平台币流水：必须按当前用户过滤。
+ * coin-transactions 的 read 对 admin 是全量，若不加 where[user]，管理员在个人中心
+ * 会看到别人的「悬赏奖励」等流水，误以为发起人也拿到了采纳奖励。
+ */
+export const AccountTransactions: React.FC<Props> = ({ userId, totalEarnings }) => {
   const { docs, page, totalPages, totalDocs, loading, setPage } = usePaginatedList<TxDoc>({
-    query: '/api/coin-transactions?depth=0&sort=-createdAt',
+    query: `/api/coin-transactions?depth=0&sort=-createdAt&where[user][equals]=${encodeURIComponent(userId)}`,
   })
 
   return (

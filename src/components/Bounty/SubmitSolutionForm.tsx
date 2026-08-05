@@ -18,6 +18,8 @@ type Props = {
   canSubmit: boolean
   /** 当前用户是否已提交过。 */
   alreadySubmitted: boolean
+  /** 悬赏当前状态，用于提交后/不可提交文案。 */
+  bountyStatus?: string | null
 }
 
 export const SubmitSolutionForm: React.FC<Props> = ({
@@ -25,6 +27,7 @@ export const SubmitSolutionForm: React.FC<Props> = ({
   isLoggedIn,
   canSubmit,
   alreadySubmitted,
+  bountyStatus,
 }) => {
   const router = useRouter()
   const [pending, setPending] = useState(false)
@@ -75,10 +78,22 @@ export const SubmitSolutionForm: React.FC<Props> = ({
   }
 
   if (done) {
+    if (bountyStatus === 'fulfilled') {
+      return <p className="text-sm text-muted-foreground">该悬赏已完成。</p>
+    }
+    if (bountyStatus === 'closed' || bountyStatus === 'rejected') {
+      return <p className="text-sm text-muted-foreground">该悬赏已关闭。</p>
+    }
     return <p className="text-sm text-muted-foreground">你已提交方案，等待发起人采纳。</p>
   }
 
   if (!canSubmit) {
+    if (bountyStatus === 'fulfilled') {
+      return <p className="text-sm text-muted-foreground">该悬赏已完成，不再接受提交。</p>
+    }
+    if (bountyStatus === 'closed' || bountyStatus === 'rejected') {
+      return <p className="text-sm text-muted-foreground">该悬赏已结束，不再接受提交。</p>
+    }
     return <p className="text-sm text-muted-foreground">该悬赏暂不接受提交。</p>
   }
 

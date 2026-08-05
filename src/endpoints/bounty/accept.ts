@@ -1,4 +1,5 @@
 import type { Endpoint, PayloadRequest } from 'payload'
+import { revalidatePath } from 'next/cache'
 
 import { applyCoinDelta } from '@/utilities/coin'
 import { notifyUser } from '@/utilities/notify'
@@ -161,6 +162,13 @@ export const bountyAcceptEndpoint: Endpoint = {
         message: `「${bounty.title}」已选择其他方案，感谢你的参与`,
         link: `/bounty/${bounty.slug}`,
       })
+    }
+
+    try {
+      revalidatePath('/bounty')
+      if (bounty.slug) revalidatePath(`/bounty/${bounty.slug}`)
+    } catch {
+      // revalidate 失败不影响结算结果
     }
 
     return json(result, 200)

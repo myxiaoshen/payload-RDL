@@ -18,6 +18,14 @@ import config from '../src/payload.config'
 import { about } from '../src/endpoints/seed/about'
 import { featuredSoftwarePage, sevenZip } from '../src/endpoints/seed/featured-software'
 import { home } from '../src/endpoints/seed/home'
+import {
+  demoBountyOpen,
+  demoBountyPending,
+  demoMarketResourceFree,
+  demoMarketResourceNormal,
+  demoMarketResourcePending,
+  demoMembershipProduct,
+} from '../src/endpoints/seed/market-demo'
 import { messages } from '../src/endpoints/seed/messages'
 import { post1 } from '../src/endpoints/seed/post-1'
 import { post2 } from '../src/endpoints/seed/post-2'
@@ -66,8 +74,17 @@ const seed = async (): Promise<void> => {
 
   payload.logger.info('=== 开始重置数据库（保留管理员账号）===')
 
-  // 1) 清空业务集合 -------------------------------------------------------
+  // 1) 清空业务集合（先清有外键/关联的交易与悬赏，再清内容）---------------
   const businessCollections: CollectionSlug[] = [
+    'notification-reads',
+    'notifications',
+    'favorites',
+    'comments',
+    'bounty-submissions',
+    'bounties',
+    'orders',
+    'coin-transactions',
+    'market-resources',
     'posts',
     'software',
     'series',
@@ -76,12 +93,8 @@ const seed = async (): Promise<void> => {
     'software-categories',
     'market-categories',
     'bounty-categories',
-    'media',
     'messages',
-    'comments',
-    'favorites',
-    'notifications',
-    'notification-reads',
+    'media',
     'search',
   ]
   for (const c of businessCollections) {
@@ -108,8 +121,17 @@ const seed = async (): Promise<void> => {
     payload.logger.warn('  ! 未找到 role=admin 的用户，跳过用户清理')
   }
 
-  // 用第一个管理员作为演示文章作者
+  // 用第一个管理员作为演示文章作者 / 会员商品作者
   const author = (admins.docs[0] as User | undefined) ?? undefined
+  if (author) {
+    await payload.update({
+      collection: 'users',
+      id: author.id,
+      data: { coinBalance: 500, totalEarnings: 0, lastSigninAt: null },
+      ...noRevalidate,
+      context: { ...noRevalidate.context, skipCoinLog: true },
+    })
+  }
 
   // 2) 重建媒体（全部外部 URL 图片）--------------------------------------
   payload.logger.info('=== 重建演示媒体（外部 URL 图片）===')
@@ -166,10 +188,17 @@ const seed = async (): Promise<void> => {
     softCats[def.slug] = doc.id as number
   }
 
+  const marketCats: Record<string, number> = {}
   for (const def of marketCatDefs) {
-    await payload.create({ collection: 'market-categories', data: def, ...noRevalidate })
+    const doc = await payload.create({
+      collection: 'market-categories',
+      data: def,
+      ...noRevalidate,
+    })
+    marketCats[def.slug] = doc.id as number
   }
 
+  const bountyCats: Record<string, number> = {}
   const bountyCatDefs: { title: string; slug: string }[] = [
     { title: '求资源', slug: 'ask-resource' },
     { title: '求教程', slug: 'ask-tutorial' },
@@ -177,7 +206,12 @@ const seed = async (): Promise<void> => {
     { title: '求设计模板', slug: 'ask-template' },
   ]
   for (const def of bountyCatDefs) {
-    await payload.create({ collection: 'bounty-categories', data: def, ...noRevalidate })
+    const doc = await payload.create({
+      collection: 'bounty-categories',
+      data: def,
+      ...noRevalidate,
+    })
+    bountyCats[def.slug] = doc.id as number
   }
 
   // 4) 文章 --------------------------------------------------------------
@@ -348,8 +382,256 @@ const seed = async (): Promise<void> => {
     await payload.create({ collection: 'messages', data: m, ...noRevalidate })
   }
 
-  // 9) 页眉 / 页脚导航 ---------------------------------------------------
+  // 9) 演示用户（买家 / 卖家 / 审核员）-----------------------------------
+  payload.logger.info('=== 重建演示用户与虚拟经济样例 ===')
+  const demoPassword = 'password'
+
+  const seller = await payload.create({
+    collection: 'users',
+    data: {
+      name: '演示卖家',
+      email: 'demo-seller@example.com',
+      password: demoPassword,
+      role: 'user',
+      status: 'approved',
+      coinBalance: 200,
+      totalEarnings: 0,
+    },
+    ...noRevalidate,
+    context: { ...noRevalidate.context, skipCoinLog: true },
+  })
+
+  const buyer = await payload.create({
+    collection: 'users',
+    data: {
+      name: '演示买家',
+      email: 'demo-buyer@example.com',
+      password: demoPassword,
+      role: 'user',
+      status: 'approved',
+      coinBalance: 150,
+      totalEarnings: 0,
+    },
+    ...noRevalidate,
+    context: { ...noRevalidate.context, skipCoinLog: true },
+  })
+
+  await payload.create({
+    collection: 'users',
+    data: {
+      name: '演示审核员',
+      email: 'demo-reviewer@example.com',
+      password: demoPassword,
+      role: 'reviewer',
+      status: 'approved',
+      coinBalance: 0,
+      totalEarnings: 0,
+    },
+    ...noRevalidate,
+    context: { ...noRevalidate.context, skipCoinLog: true },
+  })
+
+  const coverMarket = await createExternalMedia(payload, '市场封面', 'marketcover', 1200, 675)
+  const coverBounty = await createExternalMedia(payload, '悬赏封面', 'bountycover', 1200, 675)
+  const marketCategoryId = marketCats['source-code']
+  const bountyCategoryId = bountyCats['ask-resource']
+  const adminId = (author?.id ?? demoAuthor.id) as number
+
+  const paidResource = await payload.create({
+    collection: 'market-resources',
+    data: demoMarketResourceNormal({
+      sellerId: seller.id,
+      marketCategoryId,
+      coverImageId: coverMarket.id,
+    }),
+    ...noRevalidate,
+  })
+  await payload.create({
+    collection: 'market-resources',
+    data: demoMarketResourceFree({
+      sellerId: seller.id,
+      marketCategoryId: marketCats['design-material'],
+      coverImageId: coverMarket.id,
+    }),
+    ...noRevalidate,
+  })
+  await payload.create({
+    collection: 'market-resources',
+    data: demoMarketResourcePending({
+      sellerId: seller.id,
+      marketCategoryId: marketCats['learning'],
+      coverImageId: coverMarket.id,
+    }),
+    ...noRevalidate,
+  })
+  await payload.create({
+    collection: 'market-resources',
+    data: demoMembershipProduct({
+      adminId,
+      marketCategoryId: marketCats['learning'],
+      coverImageId: coverMarket.id,
+    }),
+    ...noRevalidate,
+  })
+
+  const openBounty = await payload.create({
+    collection: 'bounties',
+    data: demoBountyOpen({
+      authorId: buyer.id,
+      bountyCategoryId,
+      coverImageId: coverBounty.id,
+    }),
+    ...noRevalidate,
+  })
+  const pendingBounty = await payload.create({
+    collection: 'bounties',
+    data: demoBountyPending({
+      authorId: seller.id,
+      bountyCategoryId: bountyCats['ask-tutorial'],
+      coverImageId: coverBounty.id,
+    }),
+    ...noRevalidate,
+  })
+
+  // 演示订单：买家已购付费资源（可直接测下载鉴权）
+  const orderPrice = paidResource.price ?? 30
+  const bountyReward = openBounty.reward ?? 40
+  let buyerBalance = buyer.coinBalance ?? 150
+  let sellerBalance = seller.coinBalance ?? 200
+
+  const order = await payload.create({
+    collection: 'orders',
+    data: {
+      buyer: buyer.id,
+      resource: paidResource.id,
+      resourceTitle: paidResource.title,
+      seller: seller.id,
+      price: orderPrice,
+      status: 'paid',
+    },
+    ...noRevalidate,
+  })
+  await payload.update({
+    collection: 'market-resources',
+    id: paidResource.id,
+    data: { salesCount: 1 },
+    ...noRevalidate,
+  })
+
+  buyerBalance = Math.max(0, buyerBalance - orderPrice)
+  sellerBalance += orderPrice
+  await payload.update({
+    collection: 'users',
+    id: buyer.id,
+    data: { coinBalance: buyerBalance },
+    ...noRevalidate,
+    context: { ...noRevalidate.context, skipCoinLog: true },
+  })
+  await payload.update({
+    collection: 'users',
+    id: seller.id,
+    data: {
+      coinBalance: sellerBalance,
+      totalEarnings: orderPrice,
+    },
+    ...noRevalidate,
+    context: { ...noRevalidate.context, skipCoinLog: true },
+  })
+
+  await payload.create({
+    collection: 'coin-transactions',
+    data: {
+      user: buyer.id,
+      amount: -orderPrice,
+      balanceAfter: buyerBalance,
+      type: 'purchase-spend',
+      note: `演示种子：购买 ${paidResource.title}`,
+      relatedOrder: order.id,
+    },
+    ...noRevalidate,
+  })
+  await payload.create({
+    collection: 'coin-transactions',
+    data: {
+      user: seller.id,
+      amount: orderPrice,
+      balanceAfter: sellerBalance,
+      type: 'sale-income',
+      note: `演示种子：售出 ${paidResource.title}`,
+      relatedOrder: order.id,
+    },
+    ...noRevalidate,
+  })
+
+  // 进行中悬赏：发起人（买家）侧已托管流水
+  buyerBalance = Math.max(0, buyerBalance - bountyReward)
+  await payload.update({
+    collection: 'users',
+    id: buyer.id,
+    data: { coinBalance: buyerBalance },
+    ...noRevalidate,
+    context: { ...noRevalidate.context, skipCoinLog: true },
+  })
+  await payload.create({
+    collection: 'coin-transactions',
+    data: {
+      user: buyer.id,
+      amount: -bountyReward,
+      balanceAfter: buyerBalance,
+      type: 'bounty-escrow',
+      note: `演示种子：发布悬赏冻结 ${openBounty.title}`,
+      relatedBounty: openBounty.id,
+    },
+    ...noRevalidate,
+  })
+
+  // 待审核悬赏：卖家侧已托管（与真实 publish 一致）
+  const pendingReward = pendingBounty.reward ?? 20
+  sellerBalance = Math.max(0, sellerBalance - pendingReward)
+  await payload.update({
+    collection: 'users',
+    id: seller.id,
+    data: { coinBalance: sellerBalance },
+    ...noRevalidate,
+    context: { ...noRevalidate.context, skipCoinLog: true },
+  })
+  await payload.create({
+    collection: 'coin-transactions',
+    data: {
+      user: seller.id,
+      amount: -pendingReward,
+      balanceAfter: sellerBalance,
+      type: 'bounty-escrow',
+      note: `演示种子：待审核悬赏冻结 ${pendingBounty.title}`,
+      relatedBounty: pendingBounty.id,
+    },
+    ...noRevalidate,
+  })
+
+  await payload.create({
+    collection: 'bounty-submissions',
+    data: {
+      bounty: openBounty.id,
+      submitter: seller.id,
+      note: '演示提交：附示例仓库说明（可被发起人采纳）。',
+      status: 'submitted',
+      downloadFile: {
+        fileSource: 'url',
+        url: 'https://example.com/download/payload-endpoint-sample.zip',
+      },
+    },
+    ...noRevalidate,
+  })
+  await payload.update({
+    collection: 'bounties',
+    id: openBounty.id,
+    data: { submissionCount: 1 },
+    ...noRevalidate,
+  })
+
+  // 10) 页眉 / 页脚导航 ---------------------------------------------------
   payload.logger.info('=== 设置页眉/页脚导航 ===')
+  // Header.navItems maxRows=6；市场/悬赏在前台 Nav 组件里另有固定入口时可精简。
   await payload.updateGlobal({
     slug: 'header',
     data: {
@@ -357,7 +639,9 @@ const seed = async (): Promise<void> => {
         { link: { type: 'custom', label: '软件', url: '/software' } },
         { link: { type: 'custom', label: '文章', url: '/posts' } },
         { link: { type: 'custom', label: '专题', url: '/topics' } },
-        { link: { type: 'custom', label: '联系我们', url: '/contact' } },
+        { link: { type: 'custom', label: '市场', url: '/market' } },
+        { link: { type: 'custom', label: '悬赏', url: '/bounty' } },
+        { link: { type: 'custom', label: 'VIP', url: '/vip' } },
       ],
     },
     ...noRevalidate,
@@ -365,8 +649,18 @@ const seed = async (): Promise<void> => {
   await payload.updateGlobal({
     slug: 'footer',
     data: {
+      description: '资源下载与学习平台，汇聚软件、教程与优质资源。',
+      quickLinks: [
+        { link: { type: 'custom', label: '文章', url: '/posts' } },
+        { link: { type: 'custom', label: '软件下载', url: '/software' } },
+        { link: { type: 'custom', label: '资源交易', url: '/market' } },
+        { link: { type: 'custom', label: '专题', url: '/topics' } },
+        { link: { type: 'custom', label: '搜索', url: '/search' } },
+      ],
       navItems: [
         { link: { type: 'custom', label: '后台管理', url: '/admin' } },
+        { link: { type: 'custom', label: '市场', url: '/market' } },
+        { link: { type: 'custom', label: '悬赏', url: '/bounty' } },
         { link: { type: 'custom', label: '联系我们', url: '/contact' } },
       ],
     },
@@ -374,6 +668,11 @@ const seed = async (): Promise<void> => {
   })
 
   payload.logger.info('=== 重置并重建演示数据完成 ===')
+  payload.logger.info('演示账号（密码均为 password）：')
+  payload.logger.info('  admin     — 你保留的管理员（已尝试将余额设为 500）')
+  payload.logger.info('  demo-buyer@example.com   — 买家（已购 1 个资源 + 发起 1 个进行中悬赏）')
+  payload.logger.info('  demo-seller@example.com  — 卖家（有上架资源 + 1 份悬赏提交）')
+  payload.logger.info('  demo-reviewer@example.com — 审核员')
   process.exit(0)
 }
 

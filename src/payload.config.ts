@@ -6,6 +6,7 @@ import { buildConfig, PayloadRequest } from 'payload'
 import { fileURLToPath } from 'url'
 
 import { Categories } from './collections/Categories'
+import { Appeals } from './collections/Appeals'
 import { Bounties } from './collections/Bounties'
 import { BountyCategories } from './collections/BountyCategories'
 import { BountySubmissions } from './collections/BountySubmissions'
@@ -37,11 +38,15 @@ import { purchaseEndpoint } from './endpoints/market/purchase'
 import { resourceDownloadEndpoint } from './endpoints/market/resourceDownload'
 import { captchaChallengeEndpoint, captchaVerifyEndpoint } from './endpoints/captcha'
 import { registerEndpoint } from './endpoints/auth/register'
+import { appealsCreateEndpoint } from './endpoints/appeals/create'
+import { reviewAppealsEndpoint } from './endpoints/review/appeals'
 import { reviewBountiesEndpoint } from './endpoints/review/bounties'
+import { reviewCommentsEndpoint } from './endpoints/review/comments'
 import { reviewMarketResourcesEndpoint } from './endpoints/review/marketResources'
 import { reviewUsersEndpoint } from './endpoints/review/users'
 import { Footer } from './Footer/config'
 import { Header } from './Header/config'
+import { HomepageHero } from './HomepageHero/config'
 import { Security } from './Security/config'
 import { plugins } from './plugins'
 import { defaultLexical } from '@/fields/defaultLexical'
@@ -141,6 +146,7 @@ export default buildConfig({
     Bounties,
     BountyCategories,
     BountySubmissions,
+    Appeals,
   ],
   //其他允许的域名添加位置
   cors: [getServerSideURL()].filter(Boolean),
@@ -161,8 +167,11 @@ export default buildConfig({
     reviewUsersEndpoint,
     reviewMarketResourcesEndpoint,
     reviewBountiesEndpoint,
+    reviewCommentsEndpoint,
+    reviewAppealsEndpoint,
+    appealsCreateEndpoint,
   ],
-  globals: [Header, Footer, Security],
+  globals: [Header, Footer, HomepageHero, Security],
   plugins,
   secret: process.env.PAYLOAD_SECRET,
   sharp,
