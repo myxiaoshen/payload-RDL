@@ -2371,7 +2371,7 @@ export interface Footer {
 export interface HomepageHero {
   id: number;
   /**
-   * 自定义菜单名称与跳转路径，字段语义与页眉/页脚导航一致。
+   * 每项必填主链接（整行可点）。可选「悬停详情」：标签分组 + 推荐卡片；留空则桌面仅作链接，不展开面板。
    */
   menuItems?:
     | {
@@ -2392,6 +2392,88 @@ export interface HomepageHero {
            */
           url?: string | null;
           label: string;
+        };
+        /**
+         * 桌面悬停时盖在轮播上的运营位。纯手动配置，不自动关联软件库。标签与卡片都为空时不展开面板。
+         */
+        panel?: {
+          /**
+           * 上方文字标签区。每组一个标题 + 若干链接（如「前沿技术」）。
+           */
+          tagGroups?:
+            | {
+                /**
+                 * 例如：前沿技术、热门分类。
+                 */
+                title: string;
+                /**
+                 * 组内可点文字链接。
+                 */
+                tags?:
+                  | {
+                      link: {
+                        type?: ('reference' | 'custom') | null;
+                        newTab?: boolean | null;
+                        reference?:
+                          | ({
+                              relationTo: 'pages';
+                              value: number | Page;
+                            } | null)
+                          | ({
+                              relationTo: 'posts';
+                              value: number | Post;
+                            } | null);
+                        /**
+                         * 可填站内路径（如 /software）或完整网址（如 https://example.com）。
+                         */
+                        url?: string | null;
+                        label: string;
+                      };
+                      id?: string | null;
+                    }[]
+                  | null;
+                id?: string | null;
+              }[]
+            | null;
+          /**
+           * 下方带图推荐位。缩略图可选；标题必填；角标如「实战」可选。
+           */
+          featureCards?:
+            | {
+                /**
+                 * 可选。建议正方形或 4:3 小图。
+                 */
+                thumbnail?: (number | null) | Media;
+                title: string;
+                /**
+                 * 可选。一行简介即可。
+                 */
+                subtitle?: string | null;
+                /**
+                 * 可选。例如：实战、新品、热门。
+                 */
+                badge?: string | null;
+                link: {
+                  type?: ('reference' | 'custom') | null;
+                  newTab?: boolean | null;
+                  reference?:
+                    | ({
+                        relationTo: 'pages';
+                        value: number | Page;
+                      } | null)
+                    | ({
+                        relationTo: 'posts';
+                        value: number | Post;
+                      } | null);
+                  /**
+                   * 可填站内路径（如 /software）或完整网址（如 https://example.com）。
+                   */
+                  url?: string | null;
+                  label: string;
+                };
+                id?: string | null;
+              }[]
+            | null;
         };
         id?: string | null;
       }[]
@@ -2568,6 +2650,48 @@ export interface HomepageHeroSelect<T extends boolean = true> {
               reference?: T;
               url?: T;
               label?: T;
+            };
+        panel?:
+          | T
+          | {
+              tagGroups?:
+                | T
+                | {
+                    title?: T;
+                    tags?:
+                      | T
+                      | {
+                          link?:
+                            | T
+                            | {
+                                type?: T;
+                                newTab?: T;
+                                reference?: T;
+                                url?: T;
+                                label?: T;
+                              };
+                          id?: T;
+                        };
+                    id?: T;
+                  };
+              featureCards?:
+                | T
+                | {
+                    thumbnail?: T;
+                    title?: T;
+                    subtitle?: T;
+                    badge?: T;
+                    link?:
+                      | T
+                      | {
+                          type?: T;
+                          newTab?: T;
+                          reference?: T;
+                          url?: T;
+                          label?: T;
+                        };
+                    id?: T;
+                  };
             };
         id?: T;
       };

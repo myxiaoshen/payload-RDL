@@ -18,7 +18,8 @@ export const HomepageHero: GlobalConfig = {
       label: '左侧软件菜单',
       maxRows: 12,
       admin: {
-        description: '自定义菜单名称与跳转路径，字段语义与页眉/页脚导航一致。',
+        description:
+          '每项必填主链接（整行可点）。可选「悬停详情」：标签分组 + 推荐卡片；留空则桌面仅作链接，不展开面板。',
         initCollapsed: true,
         components: {
           RowLabel: '@/HomepageHero/RowLabel#MenuRowLabel',
@@ -28,6 +29,108 @@ export const HomepageHero: GlobalConfig = {
         link({
           appearances: false,
         }),
+        {
+          name: 'panel',
+          type: 'group',
+          label: '悬停详情面板',
+          admin: {
+            description:
+              '桌面悬停时盖在轮播上的运营位。纯手动配置，不自动关联软件库。标签与卡片都为空时不展开面板。',
+          },
+          fields: [
+            {
+              name: 'tagGroups',
+              type: 'array',
+              label: '标签分组',
+              maxRows: 6,
+              admin: {
+                description: '上方文字标签区。每组一个标题 + 若干链接（如「前沿技术」）。',
+                initCollapsed: true,
+                components: {
+                  RowLabel: '@/HomepageHero/RowLabel#TagGroupRowLabel',
+                },
+              },
+              fields: [
+                {
+                  name: 'title',
+                  type: 'text',
+                  label: '分组标题',
+                  required: true,
+                  admin: {
+                    description: '例如：前沿技术、热门分类。',
+                  },
+                },
+                {
+                  name: 'tags',
+                  type: 'array',
+                  label: '标签链接',
+                  maxRows: 12,
+                  admin: {
+                    description: '组内可点文字链接。',
+                    initCollapsed: true,
+                    components: {
+                      RowLabel: '@/HomepageHero/RowLabel#TagLinkRowLabel',
+                    },
+                  },
+                  fields: [
+                    link({
+                      appearances: false,
+                    }),
+                  ],
+                },
+              ],
+            },
+            {
+              name: 'featureCards',
+              type: 'array',
+              label: '推荐卡片',
+              maxRows: 8,
+              admin: {
+                description: '下方带图推荐位。缩略图可选；标题必填；角标如「实战」可选。',
+                initCollapsed: true,
+                components: {
+                  RowLabel: '@/HomepageHero/RowLabel#FeatureCardRowLabel',
+                },
+              },
+              fields: [
+                {
+                  name: 'thumbnail',
+                  type: 'upload',
+                  relationTo: 'media',
+                  label: '缩略图',
+                  admin: {
+                    description: '可选。建议正方形或 4:3 小图。',
+                  },
+                },
+                {
+                  name: 'title',
+                  type: 'text',
+                  label: '标题',
+                  required: true,
+                },
+                {
+                  name: 'subtitle',
+                  type: 'text',
+                  label: '副文案',
+                  admin: {
+                    description: '可选。一行简介即可。',
+                  },
+                },
+                {
+                  name: 'badge',
+                  type: 'text',
+                  label: '角标',
+                  admin: {
+                    description: '可选。例如：实战、新品、热门。',
+                  },
+                },
+                link({
+                  appearances: false,
+                }),
+              ],
+            },
+          ],
+        },
       ],
     },
     {

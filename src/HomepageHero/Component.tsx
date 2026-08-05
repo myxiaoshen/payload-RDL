@@ -16,7 +16,8 @@ import {
 } from './Component.client'
 
 export async function HomepageHero() {
-  const data: HomepageHeroGlobal = await getCachedGlobal('homepage-hero', 1)()
+  // depth 2: menu panel featureCards.thumbnail + slide media + link references
+  const data: HomepageHeroGlobal = await getCachedGlobal('homepage-hero', 2)()
 
   const menuItems: HomepageHeroMenuItem[] =
     data.menuItems && data.menuItems.length > 0

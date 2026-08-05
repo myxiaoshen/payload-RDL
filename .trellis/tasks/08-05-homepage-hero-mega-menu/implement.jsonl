@@ -1,0 +1,3 @@
+{"file": ".trellis/spec/frontend/index.md", "reason": "Frontend guideline index for HomepageHero UI work"}
+{"file": ".trellis/spec/frontend/component-guidelines.md", "reason": "Component patterns and identity/UI gating notes"}
+{"file": ".trellis/spec/frontend/quality-guidelines.md", "reason": "Frontend quality and privacy/revalidate related conventions"}
